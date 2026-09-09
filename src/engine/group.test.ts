@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
-
-import type { ChartSpec, Panel, ResolvedPoint } from "./model";
 import { applyFilters, buildPanels, distinctValues } from "./group";
+import type { ChartSpec, Panel, ResolvedPoint } from "./model";
 
 const point = (
   id: number,
@@ -48,23 +47,43 @@ describe("grouping engine", () => {
   const points: ResolvedPoint[] = [
     // kiddo 6.3.0, uniform, f64: a tree-size sweep
     ...[65536, 131072, 262144].map((tree_size, i) =>
-      point(100 + i, { ...base, tree_size, version: "6.3.0" }, {
-        "kiddo.bucket": "32",
-      }, 90 + i * 10),
+      point(
+        100 + i,
+        { ...base, tree_size, version: "6.3.0" },
+        {
+          "kiddo.bucket": "32",
+        },
+        90 + i * 10,
+      ),
     ),
     // kiddo 5.3.3, uniform, f64: same sweep, different version
     ...[65536, 131072, 262144].map((tree_size, i) =>
-      point(200 + i, { ...base, tree_size, version: "5.3.3" }, {
-        "kiddo.bucket": "32",
-      }, 110 + i * 10),
+      point(
+        200 + i,
+        { ...base, tree_size, version: "5.3.3" },
+        {
+          "kiddo.bucket": "32",
+        },
+        110 + i * 10,
+      ),
     ),
     // kiddo 6.3.0, gaussian: a second chart when the chartKey is dataset
-    point(300, { ...base, tree_size: 65536, dataset: "gaussian", version: "6.3.0" }, {}, 70),
+    point(
+      300,
+      { ...base, tree_size: 65536, dataset: "gaussian", version: "6.3.0" },
+      {},
+      70,
+    ),
     // a f32 point the f64 filter must exclude
     point(400, { ...base, axis: "f32", tree_size: 65536, version: "6.3.0" }, {}, 50),
     // a re-benchmark of the same case: `latest` dedupe must supersede
-    point(101, { ...base, tree_size: 65536, version: "6.3.0" }, {}, 999,
-      "2026-09-08T00:00:00Z"),
+    point(
+      101,
+      { ...base, tree_size: 65536, version: "6.3.0" },
+      {},
+      999,
+      "2026-09-08T00:00:00Z",
+    ),
   ];
 
   const spec: ChartSpec = {
@@ -92,8 +111,10 @@ describe("grouping engine", () => {
     const panels: Panel[] = buildPanels(points, spec);
     expect(panels).toHaveLength(1); // no panelKey → one panel
     const panel = panels[0]!;
-    expect(panel.charts.map((c) => c.identity.dataset).sort())
-      .toEqual(["gaussian", "uniform"]);
+    expect(panel.charts.map((c) => c.identity.dataset).sort()).toEqual([
+      "gaussian",
+      "uniform",
+    ]);
   });
 
   test("series split on identity and dedupe on latest", () => {
@@ -131,9 +152,7 @@ describe("grouping engine", () => {
       seriesKeys: ["impl", "version"],
     });
     const panel = byPanels(byBucket)[0]!;
-    expect(
-      panel.charts.find((c) => c.identity["kiddo.bucket"] === "32"),
-    ).toBeDefined();
+    expect(panel.charts.find((c) => c.identity["kiddo.bucket"] === "32")).toBeDefined();
   });
 
   test("x order is numeric for tree sizes", () => {

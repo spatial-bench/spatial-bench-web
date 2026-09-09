@@ -1,11 +1,4 @@
-import type {
-  ChartSpec,
-  Field,
-  Filter,
-  Panel,
-  ResolvedPoint,
-  Series,
-} from "./model";
+import type { ChartSpec, Field, Filter, Panel, ResolvedPoint, Series } from "./model";
 import { isCoreField } from "./model";
 
 /**
@@ -26,9 +19,7 @@ export function applyFilters(
   points: ResolvedPoint[],
   filters: Filter[],
 ): ResolvedPoint[] {
-  return points.filter((point) =>
-    filters.every((f) => filterMatches(point, f)),
-  );
+  return points.filter((point) => filters.every((f) => filterMatches(point, f)));
 }
 
 function filterMatches(point: ResolvedPoint, filter: Filter): boolean {
@@ -44,10 +35,7 @@ function filterMatches(point: ResolvedPoint, filter: Filter): boolean {
 }
 
 /** Distinct values of a field across points, sorted — dropdown contents. */
-export function distinctValues(
-  points: ResolvedPoint[],
-  field: Field,
-): string[] {
+export function distinctValues(points: ResolvedPoint[], field: Field): string[] {
   const values = new Set<string>();
   for (const point of points) {
     const value = fieldValue(point, field);
@@ -77,10 +65,7 @@ const identityKey = (identity: Record<string, string>): string =>
  * the spec's seriesKeys. Within a series, points are deduped per x (a
  * re-benchmark of the same case must not draw two dots) and ordered.
  */
-export function buildPanels(
-  points: ResolvedPoint[],
-  spec: ChartSpec,
-): Panel[] {
+export function buildPanels(points: ResolvedPoint[], spec: ChartSpec): Panel[] {
   const filtered = applyFilters(points, spec.filters);
 
   const panels = groupBy(filtered, spec.panelKey);
@@ -134,30 +119,26 @@ function buildSeries(chartPoints: ResolvedPoint[], spec: ChartSpec): Series[] {
     );
     series.push({ identity, points: seriesPoints(points, spec) });
   }
-  series.sort((a, b) =>
-    spec.seriesKeys
-      .map((key) => compareValues(a.identity[key] ?? "", b.identity[key] ?? ""))
-      .find((c) => c !== 0) ?? 0,
+  series.sort(
+    (a, b) =>
+      spec.seriesKeys
+        .map((key) => compareValues(a.identity[key] ?? "", b.identity[key] ?? ""))
+        .find((c) => c !== 0) ?? 0,
   );
   return series;
 }
 
 /** Dedupe per x, then order. */
-function seriesPoints(
-  points: ResolvedPoint[],
-  spec: ChartSpec,
-): Series["points"] {
+function seriesPoints(points: ResolvedPoint[], spec: ChartSpec): Series["points"] {
   const perX = new Map<string, ResolvedPoint>();
   for (const point of points) {
     const x = String(point.core[spec.x]);
     const existing = perX.get(x);
     if (
       existing === undefined ||
-      (spec.dedupe === "latest" &&
-        point.startedAt > existing.startedAt) ||
+      (spec.dedupe === "latest" && point.startedAt > existing.startedAt) ||
       (spec.dedupe === "median" &&
-        (point.medianNs ?? point.latencyNs) <
-          (existing.medianNs ?? existing.latencyNs))
+        (point.medianNs ?? point.latencyNs) < (existing.medianNs ?? existing.latencyNs))
     ) {
       perX.set(x, point);
     }
@@ -232,10 +213,7 @@ export interface SeriesStyle {
   dash: string;
 }
 
-export function assignStyles(
-  series: Series[],
-  spec: ChartSpec,
-): SeriesStyle[] {
+export function assignStyles(series: Series[], spec: ChartSpec): SeriesStyle[] {
   const colourValues = spec.channels.colour
     ? [...new Set(series.map((s) => s.identity[spec.channels.colour ?? ""]))]
     : [];
@@ -253,10 +231,7 @@ export function assignStyles(
     const colour =
       COLOUR_PALETTE[colourIndex % COLOUR_PALETTE.length] ?? COLOUR_PALETTE[0]!;
     const brightness = spec.channels.brightness
-      ? Math.max(
-          0,
-          brightnessValues.indexOf(s.identity[spec.channels.brightness]),
-        )
+      ? Math.max(0, brightnessValues.indexOf(s.identity[spec.channels.brightness]))
       : 0;
     const dashIndex = spec.channels.lineStyle
       ? Math.max(0, dashValues.indexOf(s.identity[spec.channels.lineStyle]))
