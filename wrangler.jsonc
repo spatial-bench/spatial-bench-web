@@ -1,13 +1,22 @@
 {
-  // Cloudflare Workers static-assets deploy: the built SPA in dist/ is served
-  // directly; not_found_page routes SPA paths back to index.html. The dataset
-  // base (VITE_DATASET_BASE) is set as a build variable in the dashboard, not
-  // here — it is baked at build time by Vite.
+  // Cloudflare Workers deploy: the built SPA in dist/ is served from the
+  // asset layer; /data/* is proxied to the R2 dataset bucket by src/worker.ts
+  // (same-origin, so the front-end needs no CORS and the r2.dev URL never
+  // appears publicly). VITE_DATASET_BASE stays unset — the app's default
+  // /data hits the proxy.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "spatial-bench-web",
+  "main": "src/worker.ts",
   "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application"
-  }
+  },
+  "r2_buckets": [
+    {
+      "binding": "DATASET",
+      "bucket_name": "spatial-bench"
+    }
+  ]
 }

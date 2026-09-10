@@ -36,3 +36,16 @@ pnpm check    # biome lint + format
 pnpm test     # vitest
 pnpm build    # tsc + vite production build
 ```
+
+## Local dev data
+
+`pnpm dev` expects `/data/latest.json`. Regenerate a local fixture from the
+results checkout (untracked, not deployed):
+
+```sh
+cargo run -p spatial-bench -- publish --results ../spatial-bench-results \
+  --out public/data/benchmarks-local.sqlite
+gzip -9 public/data/benchmarks-local.sqlite
+# write public/data/latest.json: {"db":"benchmarks-local.sqlite.gz","sha":"local",
+#   "sha256":"<hash of the .gz>","bytes":<gz size>,"generated_at":"<utc now>"}
+```
