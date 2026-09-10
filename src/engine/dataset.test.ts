@@ -16,7 +16,7 @@ let points: ResolvedPoint[];
 let machines: string[];
 
 beforeAll(async () => {
-  const bytes = new Uint8Array(readFileSync("public/data/benchmarks-test.sqlite"));
+  const bytes = new Uint8Array(readFileSync(".fixture/benchmarks-test.sqlite"));
   db = await openInMemory(bytes);
   ({ points, machines } = await loadDataset(db));
 }, 30_000);

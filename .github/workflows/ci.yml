@@ -43,15 +43,15 @@ jobs:
 
       - name: Build the dataset fixture
         run: |
-          mkdir -p public/data
+          mkdir -p .fixture
           engine/target/release/spatial-bench publish \
             --results results \
-            --out public/data/benchmarks-test.sqlite --sha local
-          gzip -9kf public/data/benchmarks-test.sqlite
-          HASH=$(sha256sum public/data/benchmarks-test.sqlite.gz | cut -d' ' -f1)
-          SIZE=$(stat -c%s public/data/benchmarks-test.sqlite.gz)
+            --out .fixture/benchmarks-test.sqlite --sha local
+          gzip -9kf .fixture/benchmarks-test.sqlite
+          HASH=$(sha256sum .fixture/benchmarks-test.sqlite.gz | cut -d' ' -f1)
+          SIZE=$(stat -c%s .fixture/benchmarks-test.sqlite.gz)
           printf '{"db": "benchmarks-test.sqlite.gz", "sha": "local", "sha256": "%s", "bytes": %s, "generated_at": "local"}\n' \
-            "$HASH" "$SIZE" > public/data/latest.json
+            "$HASH" "$SIZE" > .fixture/latest.json
 
       - run: pnpm check
       - run: pnpm test
