@@ -21,6 +21,38 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      - name: Checkout the engine
+        uses: actions/checkout@v4
+        with:
+          repository: spatial-bench/spatial-bench-core
+          path: engine
+
+      - name: Checkout the results repo
+        uses: actions/checkout@v4
+        with:
+          repository: spatial-bench/spatial-bench-results
+          path: results
+
+      - name: Install the toolchain for the collator
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Build the collator
+        run: cargo build --release -p spatial-bench
+        working-directory: engine
+
+      - name: Build the dataset fixture
+        run: |
+          mkdir -p public/data
+          ../engine/target/release/spatial-bench publish \
+            --results results \
+            --out public/data/benchmarks-test.sqlite --sha local
+          gzip -9kf public/data/benchmarks-test.sqlite
+          HASH=$(sha256sum public/data/benchmarks-test.sqlite.gz | cut -d' ' -f1)
+          SIZE=$(stat -c%s public/data/benchmarks-test.sqlite.gz)
+          printf '{"db": "benchmarks-test.sqlite.gz", "sha": "local", "sha256": "%s", "bytes": %s, "generated_at": "local"}\n' \
+            "$HASH" "$SIZE" > public/data/latest.json
+
       - run: pnpm check
       - run: pnpm test
       - run: pnpm build
