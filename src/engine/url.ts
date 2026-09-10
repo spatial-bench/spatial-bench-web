@@ -22,7 +22,7 @@ export function specFromQuery(
     const parsed = JSON.parse(json) as ChartSpec;
     // Structural sanity, not a full schema: the engine is defensive anyway.
     if (typeof parsed !== "object" || !parsed.chartKey) return fallback;
-    return { ...spec, ...parsed };
+    return { ...fallback, ...parsed };
   } catch {
     return fallback;
   }
