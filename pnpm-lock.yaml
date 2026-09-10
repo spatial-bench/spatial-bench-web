@@ -90,9 +90,6 @@ importers:
       vitest:
         specifier: ^5.0.0
         version: 5.0.0(@types/node@22.20.1)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0))
-      zstd:
-        specifier: ^1.0.4
-        version: 1.0.4
 
 packages:
 
@@ -985,9 +982,6 @@ packages:
   math-expression-evaluator@1.4.0:
     resolution: {integrity: sha512-4vRUvPyxdO8cWULGTh9dZWL2tZK6LDBvj+OGHBER7poH9Qdt7kXEoj20wiz4lQUbUXQZFjPbe5mVDo9nutizCw==}
 
-  nan@1.6.2:
-    resolution: {integrity: sha512-2k6Qbb1IebL65KNFFuR6h5jkcMSgn7o+6XXxLCLyWf5K0+/SniVYI7crdNLTE7lYOz/yYN8lP4qIwmjL6tm0qw==}
-
   nanoid@3.3.18:
     resolution: {integrity: sha512-DTg4MJbGMWkfi6VZFdNt2/caMbQy4Ou+Op/hJQvGEWcnVfoA1QA+xzRKAzw9jD6+GVOOeYr/mIcuDSdug6F6+w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
@@ -1171,9 +1165,6 @@ packages:
     resolution: {integrity: sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==}
     engines: {node: '>=8'}
     hasBin: true
-
-  zstd@1.0.4:
-    resolution: {integrity: sha512-3ablWR4RyBYynNWpjK4Zp6Q1Qm4/GVEhFNmxpKqCJMrxAiwcc2DiD8qYhuuRPL1Quis8lpomCK0ygkZVchUGwg==}
 
 snapshots:
 
@@ -1832,8 +1823,6 @@ snapshots:
 
   math-expression-evaluator@1.4.0: {}
 
-  nan@1.6.2: {}
-
   nanoid@3.3.18: {}
 
   obug@2.1.4: {}
@@ -1979,7 +1968,3 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
-
-  zstd@1.0.4:
-    dependencies:
-      nan: 1.6.2
