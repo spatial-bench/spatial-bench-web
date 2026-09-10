@@ -89,11 +89,26 @@ export interface DatasetDb {
 
 export async function openInMemory(bytes: Uint8Array): Promise<DatasetDb> {
   const sqlite3 = await sqlite3Module();
-  // Mount the bytes as a file in the wasm's memory-backed VFS, then open it.
-  // The name is unique per call so two datasets never share a file.
-  const name = `snapshot-${Date.now()}.sqlite`;
-  sqlite3.capi.sqlite3_js_posix_create_file(name, bytes, bytes.length);
-  const db = new sqlite3.oo1.DB({ filename: name, flags: "c" });
+  // Deserialize the snapshot onto an in-memory database — the browser path.
+  // (The wasm-filesystem mount used before works in Node but not in a browser
+  // main thread, where no POSIX layer exists.) Ownership of the buffer moves
+  // to sqlite: on failure the allocation is freed here; on success the
+  // connection owns it and closing the db frees it.
+  const db = new sqlite3.oo1.DB({ filename: ":memory:", flags: "c" });
+  const ptr = sqlite3.wasm.allocFromTypedArray(bytes);
+  const rc = sqlite3.capi.sqlite3_deserialize(
+    db,
+    "main",
+    ptr,
+    bytes.length,
+    bytes.length,
+    0,
+  );
+  if (rc !== 0) {
+    sqlite3.wasm.dealloc(ptr);
+    db.close();
+    throw new Error(`could not mount the snapshot: sqlite3_deserialize rc=${rc}`);
+  }
   return {
     select(sql: string, bind: unknown[] = []): Record<string, unknown>[] {
       const rows: Record<string, unknown>[] = [];
@@ -123,15 +138,24 @@ interface Sqlite3 {
     DB: new (config: { filename: string; flags: string }) => SqliteDb;
   };
   capi: {
-    sqlite3_js_posix_create_file: (
-      filename: string,
-      data: Uint8Array,
-      dataLen?: number,
-    ) => void;
+    sqlite3_deserialize: (
+      db: SqliteDb | number,
+      schema: string,
+      data: number,
+      dbSize: number,
+      bufferSize: number,
+      flags: number,
+    ) => number;
+  };
+  wasm: {
+    allocFromTypedArray: (src: Uint8Array | ArrayBuffer) => number;
+    dealloc: (ptr: number) => void;
   };
 }
 
 interface SqliteDb {
+  /** The underlying wasm handle, for the C-style deserialize call. */
+  pointer: number | undefined;
   exec: (options: {
     sql: string;
     bind?: unknown[];
