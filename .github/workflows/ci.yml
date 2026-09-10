@@ -44,7 +44,7 @@ jobs:
       - name: Build the dataset fixture
         run: |
           mkdir -p public/data
-          ../engine/target/release/spatial-bench publish \
+          engine/target/release/spatial-bench publish \
             --results results \
             --out public/data/benchmarks-test.sqlite --sha local
           gzip -9kf public/data/benchmarks-test.sqlite
