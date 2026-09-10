@@ -1,6 +1,17 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.12/schema.json",
-  "files": { "includes": ["**", "!.git", "!dist"] },
+  "files": {
+    "includes": [
+      "src/**",
+      "vite.config.ts",
+      "vitest.config.ts",
+      "biome.json",
+      "package.json",
+      "tsconfig.json",
+      "!dist",
+      "!node_modules"
+    ]
+  },
   "formatter": { "enabled": true, "indentStyle": "space", "lineWidth": 88 },
   "linter": { "enabled": true, "rules": { "preset": "none" } },
   "javascript": { "formatter": { "quoteStyle": "double", "semicolons": "always" } },
