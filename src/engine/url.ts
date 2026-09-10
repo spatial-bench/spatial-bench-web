@@ -10,10 +10,7 @@ export function specToQuery(spec: ChartSpec): string {
   return `spec=${b64}`;
 }
 
-export function specFromQuery(
-  search: string,
-  fallback: ChartSpec,
-): ChartSpec {
+export function specFromQuery(search: string, fallback: ChartSpec): ChartSpec {
   const params = new URLSearchParams(search);
   const raw = params.get("spec");
   if (!raw) return fallback;
