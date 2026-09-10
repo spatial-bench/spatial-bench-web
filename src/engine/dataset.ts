@@ -51,18 +51,30 @@ export async function fetchSnapshot(
   if (!res.ok) throw new Error(`${manifest.db}: HTTP ${res.status}`);
   const compressed = await res.arrayBuffer();
 
-  const actual = await sha256Hex(compressed);
+  // The edge may serve the artifact decompressed in transit (r2.dev does
+  // when the object carries Content-Encoding), so decompress when the bytes
+  // are gzip and verify the hash of the bytes the app will actually open —
+  // the manifest's sha256 describes the decompressed snapshot.
+  let raw: ArrayBuffer = compressed;
+  if (looksGzipped(new Uint8Array(compressed))) {
+    const stream = new Response(compressed).body!.pipeThrough(
+      new DecompressionStream("gzip"),
+    );
+    raw = await new Response(stream).arrayBuffer();
+  }
+
+  const actual = await sha256Hex(raw);
   if (manifest.sha256 && manifest.sha256 !== actual) {
     throw new Error(
       `sha256 mismatch for ${manifest.db}: manifest says ${manifest.sha256}, got ${actual}`,
     );
   }
+  return new Uint8Array(raw);
+}
 
-  const stream = new Response(compressed).body!.pipeThrough(
-    new DecompressionStream("gzip"),
-  );
-  const bytes = await new Response(stream).arrayBuffer();
-  return new Uint8Array(bytes);
+/** SQLite files begin with the magic "SQLite format 3\u0000"; gzip is 1f 8b. */
+function looksGzipped(bytes: Uint8Array): boolean {
+  return bytes[0] === 0x1f && bytes[1] === 0x8b;
 }
 
 /**
