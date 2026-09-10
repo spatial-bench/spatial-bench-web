@@ -16,15 +16,15 @@ export function specFromQuery(
 ): ChartSpec {
   const params = new URLSearchParams(search);
   const raw = params.get("spec");
-  if (!raw) return spec;
+  if (!raw) return fallback;
   try {
     const json = atob(raw.replace(/-/g, "+").replace(/_/g, "/"));
     const parsed = JSON.parse(json) as ChartSpec;
     // Structural sanity, not a full schema: the engine is defensive anyway.
-    if (typeof parsed !== "object" || !parsed.chartKey) return spec;
+    if (typeof parsed !== "object" || !parsed.chartKey) return fallback;
     return { ...spec, ...parsed };
   } catch {
-    return spec;
+    return fallback;
   }
 }
 
