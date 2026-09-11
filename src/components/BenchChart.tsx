@@ -203,7 +203,7 @@ export function BenchChart({
         />
         <AxisLeft
           scale={yScale}
-          numTicks={5}
+          tickValues={spec.yScale === "log" ? logTicks(yScale) : undefined}
           tickFormat={(v: NumberValue) => formatNs(Number(v))}
           tickLabelProps={() => ({ fill: "#a1a1aa", fontSize: 10, textAnchor: "end" })}
           label={axisLabel(spec.y)}
@@ -277,6 +277,22 @@ function axisLabel(field: string): string {
   if (field === "latency_ns") return "latency (ns/query)";
   if (field === "throughput_qps") return "throughput (q/s)";
   return field;
+}
+
+/**
+ * Log scales emit every mantissa (1..9 per decade), which crowds the axis.
+ * Keep the 1/2/5 pattern.
+ */
+function logTicks(scale: { ticks: () => NumberValue[] | number[] }): number[] {
+  return scale
+    .ticks()
+    .map(Number)
+    .filter((v) => {
+      if (v <= 0) return false;
+      const exponent = Math.floor(Math.log10(v));
+      const mantissa = Math.round(v / 10 ** exponent);
+      return mantissa === 1 || mantissa === 2 || mantissa === 5;
+    });
 }
 
 function formatNs(v: number): string {

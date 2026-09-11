@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+/*
+ * The app is dark by design: without an explicit base, the page background
+ * is the browser's white and every muted grey reads as black-on-dark or
+ * light-on-white depending on what a card happens to sit on.
+ */
+body {
+  background-color: var(--color-zinc-950);
+  color: var(--color-zinc-200);
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
