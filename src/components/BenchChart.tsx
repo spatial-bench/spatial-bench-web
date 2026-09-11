@@ -37,7 +37,10 @@ export function BenchChart({
   const innerWidth = width - MARGIN.left - MARGIN.right;
   const innerHeight = height - MARGIN.top - MARGIN.bottom;
 
-  const fullDomain = useMemo(() => fullXDomain(chart), [chart]);
+  const fullDomain = useMemo(
+    () => fullXDomain(chart, spec.xScale),
+    [chart, spec.xScale],
+  );
   const [zoom, setZoom] = useState<Zoom | null>(null);
   const [hover, setHover] = useState<Hover | null>(null);
   const dragRef = useRef<{ px: number; domain: [number, number] } | null>(null);
@@ -321,7 +324,7 @@ function formatSI(value: number): string {
   return String(value);
 }
 
-function fullXDomain(chart: Chart): [number, number] {
+function fullXDomain(chart: Chart, scale: "log" | "linear"): [number, number] {
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
   for (const series of chart.series) {
@@ -332,7 +335,16 @@ function fullXDomain(chart: Chart): [number, number] {
       }
     }
   }
-  if (!Number.isFinite(min)) return [0, 1];
+  if (!Number.isFinite(min)) return [1, 2];
+  if (scale === "log") {
+    // Pad in log space: a linear pad on a log axis pushes the lower bound
+    // negative, and a log scale cannot cross zero — the scale would clamp
+    // to MIN_VALUE and the axis would span a thousand dead decades.
+    const logMin = Math.log2(Math.max(min, 1));
+    const logMax = Math.log2(Math.max(max, logMin * 2));
+    const pad = (logMax - logMin || 1) * 0.08;
+    return [2 ** (logMin - pad), 2 ** (logMax + pad)];
+  }
   const pad = (max - min || 1) * 0.04;
   return [min - pad, max + pad];
 }

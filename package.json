@@ -29,6 +29,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",
     "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/react": "^16.3.3",
     "@types/d3-scale": "^4.0.9",
     "@types/d3-shape": "^3.2.0",
     "@types/node": "^22.20.1",
@@ -36,6 +37,7 @@
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
     "codec": "^0.0.3",
+    "jsdom": "^30.0.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
