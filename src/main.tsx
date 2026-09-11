@@ -8,6 +8,7 @@ import type { SeriesStyle } from "./engine/group";
 import { assignStyles, buildPanels } from "./engine/group";
 import type { Chart, ChartSpec, ResolvedPoint } from "./engine/model";
 import { pushSpecToUrl, specFromQuery } from "./engine/url";
+import { useContainerWidth } from "./hooks/useContainerWidth";
 import { DATASET_BASE, useDataset } from "./hooks/useDataset";
 
 const queryClient = new QueryClient();
@@ -163,9 +164,6 @@ function PointDetail({ point }: { point: ResolvedPoint }): React.ReactElement {
   );
 }
 
-const CHART_WIDTH = 560;
-const CHART_HEIGHT = 320;
-
 function Explorer(): React.ReactElement {
   const query = useDataset();
   const [selected, setSelected] = useState<ResolvedPoint | null>(null);
@@ -202,54 +200,76 @@ function Explorer(): React.ReactElement {
     );
   }
 
+  const { ref: chartsRef, width: chartWidth } = useContainerWidth(760);
+  // Taller charts earn their space on desktop; mobile keeps them compact.
+  const chartHeight = chartWidth > 560 ? 320 : 260;
+
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-72 shrink-0 overflow-y-auto border-r border-zinc-800 bg-zinc-950 p-4">
-        <SpecEditor
-          spec={spec}
-          onChange={setSpec}
-          points={points}
-          machines={machines}
-        />
-      </aside>
-      <div className="flex-1 overflow-y-auto p-6">
-        {panels.length === 0 && (
-          <p className="text-zinc-500">
-            the current filters match no points — loosen something
-          </p>
-        )}
-        {panels.map((panel) => (
-          <section key={identityLabel(panel.identity)} className="mb-10">
-            <h2 className="mb-3 text-sm font-medium text-zinc-300">
-              {identityLabel(panel.identity)}
-            </h2>
-            <div className="flex flex-wrap gap-6">
-              {panel.charts.map((styled) => (
-                <div
-                  key={identityLabel(styled.chart.identity)}
-                  className="rounded-lg border border-zinc-800 bg-zinc-900 p-3"
-                >
-                  <h3 className="mb-1 text-xs text-zinc-400">
-                    {identityLabel(styled.chart.identity)}
-                  </h3>
-                  <ChartLegend wrapper={styled} spec={spec} />
-                  <BenchChart
-                    chart={styled.chart}
-                    spec={spec}
-                    styles={styled.styles}
-                    width={CHART_WIDTH}
-                    height={CHART_HEIGHT}
-                    selected={selected}
-                    onSelect={setSelected}
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-30 border-b border-zinc-800 bg-zinc-950/95 px-4 py-3 backdrop-blur sm:px-6">
+        <div className="mx-auto flex max-w-5xl items-baseline justify-between gap-4">
+          <h1 className="text-lg font-semibold">spatial-bench</h1>
+          <span className="truncate text-xs text-zinc-500">
+            {machines.length === 1
+              ? `machine: ${machines[0]}`
+              : `${machines.length} machines`}
+          </span>
+        </div>
+      </header>
+      <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6">
+        <details open className="mb-6 rounded-lg border border-zinc-800 bg-zinc-950">
+          <summary className="cursor-pointer px-4 py-2.5 text-sm font-medium text-zinc-300">
+            chart controls
+          </summary>
+          <div className="px-4 pb-4 pt-1 sm:columns-2 lg:columns-3 [&>div]:break-inside-avoid">
+            <SpecEditor
+              spec={spec}
+              onChange={setSpec}
+              points={points}
+              machines={machines}
+            />
+          </div>
+        </details>
+
+        <div ref={chartsRef}>
+          {panels.length === 0 && (
+            <p className="text-zinc-500">
+              the current filters match no points — loosen something
+            </p>
+          )}
+          {panels.map((panel) => (
+            <section key={identityLabel(panel.identity)} className="mb-10">
+              <h2 className="mb-3 text-sm font-medium text-zinc-300">
+                {identityLabel(panel.identity)}
+              </h2>
+              <div className="flex flex-col gap-6">
+                {panel.charts.map((styled) => (
+                  <div
+                    key={identityLabel(styled.chart.identity)}
+                    className="rounded-lg border border-zinc-800 bg-zinc-900 p-3"
+                  >
+                    <h3 className="mb-1 text-xs text-zinc-400">
+                      {identityLabel(styled.chart.identity)}
+                    </h3>
+                    <ChartLegend wrapper={styled} spec={spec} />
+                    <BenchChart
+                      chart={styled.chart}
+                      spec={spec}
+                      styles={styled.styles}
+                      width={chartWidth}
+                      height={chartHeight}
+                      selected={selected}
+                      onSelect={setSelected}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
       {selected && (
-        <div className="fixed right-4 top-4 z-10 shadow-2xl">
+        <div className="fixed inset-x-2 top-16 z-20 max-w-sm mx-auto shadow-2xl sm:inset-x-4 sm:left-auto sm:right-4 sm:top-20">
           <PointDetail point={selected} />
           <button
             type="button"
