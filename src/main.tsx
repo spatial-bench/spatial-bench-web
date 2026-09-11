@@ -188,6 +188,12 @@ function Explorer(): React.ReactElement {
     pushSpecToUrl(spec);
   }, [spec]);
 
+  // Hooks stay unconditional: the chart area's measured width is needed in
+  // every render, loading or not.
+  const { ref: chartsRef, width: chartWidth } = useContainerWidth(760);
+  // Taller charts earn their space on desktop; mobile keeps them compact.
+  const chartHeight = chartWidth > 560 ? 320 : 260;
+
   if (query.isPending) {
     return <p className="p-8 text-zinc-400">loading dataset…</p>;
   }
@@ -199,10 +205,6 @@ function Explorer(): React.ReactElement {
       </p>
     );
   }
-
-  const { ref: chartsRef, width: chartWidth } = useContainerWidth(760);
-  // Taller charts earn their space on desktop; mobile keeps them compact.
-  const chartHeight = chartWidth > 560 ? 320 : 260;
 
   return (
     <div className="min-h-screen">
