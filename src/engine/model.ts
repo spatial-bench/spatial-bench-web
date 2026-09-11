@@ -116,6 +116,7 @@ export interface ChartSpec {
   channels: Channels;
   x: XField;
   y: YField;
+  xScale: Scale;
   yScale: Scale;
   /**
    * How a series with several points at the same x combines. `latest` takes

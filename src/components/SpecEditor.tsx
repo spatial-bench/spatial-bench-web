@@ -260,21 +260,44 @@ export function SpecEditor({
         </div>
       </div>
 
-      <div className="mb-3 flex gap-2">
-        <button
-          type="button"
-          className={spec.yScale === "log" ? ACTIVE : INACTIVE}
-          onClick={() => set({ yScale: "log" })}
-        >
-          log
-        </button>
-        <button
-          type="button"
-          className={spec.yScale === "linear" ? ACTIVE : INACTIVE}
-          onClick={() => set({ yScale: "linear" })}
-        >
-          linear
-        </button>
+      <div className="mb-3">
+        <span className={LABEL}>y scale</span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className={spec.yScale === "log" ? ACTIVE : INACTIVE}
+            onClick={() => set({ yScale: "log" })}
+          >
+            log
+          </button>
+          <button
+            type="button"
+            className={spec.yScale === "linear" ? ACTIVE : INACTIVE}
+            onClick={() => set({ yScale: "linear" })}
+          >
+            linear
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <span className={LABEL}>x scale</span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className={spec.xScale === "log" ? ACTIVE : INACTIVE}
+            onClick={() => set({ xScale: "log" })}
+          >
+            log2
+          </button>
+          <button
+            type="button"
+            className={spec.xScale === "linear" ? ACTIVE : INACTIVE}
+            onClick={() => set({ xScale: "linear" })}
+          >
+            linear
+          </button>
+        </div>
       </div>
 
       <div className="mb-4 flex gap-2">

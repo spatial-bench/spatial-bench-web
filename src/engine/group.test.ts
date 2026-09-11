@@ -93,6 +93,7 @@ describe("grouping engine", () => {
     channels: { colour: "impl", brightness: "version" },
     x: "tree_size",
     y: "latency_ns",
+    xScale: "linear",
     yScale: "log",
     dedupe: "latest",
   };

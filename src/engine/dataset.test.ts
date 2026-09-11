@@ -63,6 +63,7 @@ describe("the dataset loader against a real collated snapshot", () => {
       channels: { colour: "version" },
       x: "tree_size",
       y: "latency_ns",
+      xScale: "linear",
       yScale: "log",
       dedupe: "latest",
     };

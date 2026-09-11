@@ -23,6 +23,7 @@ const DEFAULT_SPEC: ChartSpec = {
   channels: { colour: "impl", brightness: "version" },
   x: "tree_size",
   y: "latency_ns",
+  xScale: "linear",
   yScale: "log",
   dedupe: "latest",
 };
@@ -55,6 +56,19 @@ function useSpec(machines: string[]): {
     pushSpecToUrl(next);
   };
   return { spec, setSpec };
+}
+
+function panelTitle(identity: Record<string, string>): string {
+  return (
+    Object.entries(identity)
+      .map(
+        ([field, value]) =>
+          `${field
+            .replace(/^[a-z]/, (c) => c.toUpperCase())
+            .replace(/_/g, " ")}: ${value}`,
+      )
+      .join(" · ") || "results"
+  );
 }
 
 function identityLabel(identity: Record<string, string>): string {
@@ -240,9 +254,12 @@ function Explorer(): React.ReactElement {
             </p>
           )}
           {panels.map((panel) => (
-            <section key={identityLabel(panel.identity)} className="mb-10">
-              <h2 className="mb-3 text-sm font-medium text-zinc-300">
-                {identityLabel(panel.identity)}
+            <section
+              key={identityLabel(panel.identity)}
+              className="mb-10 border-t border-zinc-800 pt-6 first:border-t-0 first:pt-0"
+            >
+              <h2 className="mb-3 text-base font-semibold text-zinc-100">
+                {panelTitle(panel.identity)}
               </h2>
               <div className="flex flex-col gap-6">
                 {panel.charts.map((styled) => (
@@ -250,8 +267,8 @@ function Explorer(): React.ReactElement {
                     key={identityLabel(styled.chart.identity)}
                     className="rounded-lg border border-zinc-800 bg-zinc-900 p-3"
                   >
-                    <h3 className="mb-1 text-xs text-zinc-400">
-                      {identityLabel(styled.chart.identity)}
+                    <h3 className="mb-1 text-xs font-medium text-zinc-300">
+                      {panelTitle(styled.chart.identity)}
                     </h3>
                     <ChartLegend wrapper={styled} spec={spec} />
                     <BenchChart

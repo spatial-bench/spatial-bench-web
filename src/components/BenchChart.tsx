@@ -48,8 +48,16 @@ export function BenchChart({
   const yBounds = useMemo(() => yBoundsOf(chart), [chart]);
 
   const xScale = useMemo(
-    () => scaleLinear({ domain: xDomain, range: [0, innerWidth], clamp: true }),
-    [xDomain, innerWidth],
+    () =>
+      spec.xScale === "log"
+        ? scaleLog({
+            base: 2,
+            domain: [Math.max(xDomain[0], Number.MIN_VALUE), xDomain[1]],
+            range: [0, innerWidth],
+            clamp: true,
+          })
+        : scaleLinear({ domain: xDomain, range: [0, innerWidth], clamp: true }),
+    [xDomain, innerWidth, spec.xScale],
   );
   const yScale = useMemo(
     () =>
@@ -88,6 +96,9 @@ export function BenchChart({
     svg.addEventListener(
       "wheel",
       (event) => {
+        // Only pinch gestures (wheel + ctrlKey) zoom; a plain two-finger
+        // scroll must keep scrolling the page.
+        if (!event.ctrlKey) return;
         event.preventDefault();
         const rect = svg.getBoundingClientRect();
         const frac = Math.max(
@@ -181,7 +192,7 @@ export function BenchChart({
           scale={xScale}
           top={innerHeight}
           numTicks={width > 500 ? 6 : 3}
-          tickFormat={(v: NumberValue) => formatSI(Number(v))}
+          tickFormat={(v: NumberValue) => formatX(Number(v), spec)}
           label={axisLabel(spec.x)}
           tickLabelProps={() => ({
             fill: "#a1a1aa",
@@ -269,9 +280,21 @@ function axisLabel(field: string): string {
 }
 
 function formatNs(v: number): string {
-  if (v >= 1e6) return `${(v / 1e6).toFixed(1)}ms`;
-  if (v >= 1e3) return `${(v / 1e3).toFixed(1)}µs`;
-  return `${v.toFixed(0)}ns`;
+  // SI units, rounded to whole numbers.
+  if (v >= 1e6) return `${Math.round(v / 1e6)}ms`;
+  if (v >= 1e3) return `${Math.round(v / 1e3)}µs`;
+  return `${Math.round(v)}ns`;
+}
+
+/** Tree sizes read as 2^N on a log2 x axis; everything else stays SI. */
+function formatX(value: number, spec: ChartSpec): string {
+  if (spec.x === "tree_size" && spec.xScale === "log" && value > 0) {
+    const exponent = Math.log2(value);
+    if (Math.abs(exponent - Math.round(exponent)) < 1e-9) {
+      return `2^${Math.round(exponent)}`;
+    }
+  }
+  return formatSI(value);
 }
 
 function formatSI(value: number): string {
