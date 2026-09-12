@@ -6,12 +6,12 @@ export interface SpecEditorProps {
   spec: ChartSpec;
   onChange: (spec: ChartSpec) => void;
   points: ResolvedPoint[];
-  machines: string[];
 }
 
 /** Fields the UI offers for grouping/series/filters. */
 export function fieldOptions(points: ResolvedPoint[]): Field[] {
   const core: Field[] = [
+    "machine_hash",
     "impl",
     "version",
     "axis",
@@ -46,68 +46,13 @@ export function SpecEditor({
   spec,
   onChange,
   points,
-  machines,
 }: SpecEditorProps): React.ReactElement {
   const fields = useMemo(() => fieldOptions(points), [points]);
-  const [pending, setPending] = useState<Record<string, Field | undefined>>({});
-
-  const set = (patch: Partial<ChartSpec>): void => onChange({ ...spec, ...patch });
-
-  /** The machine dropdown — a mandatory dimension, one machine at a time. */
-  const machineSelect: React.ReactElement = (
-    <div className="mb-4">
-      <span className={LABEL}>machine (fingerprint)</span>
-      <select
-        className={SELECT}
-        value={spec.filters.find((f) => f.field === "machine_hash")?.values[0] ?? ""}
-        onChange={(event) => {
-          const machine = event.target.value;
-          const filters = spec.filters.filter((f) => f.field !== "machine_hash");
-          if (machine !== "") {
-            filters.push({ field: "machine_hash", op: "in", values: [machine] });
-          }
-          set({ filters });
-        }}
-      >
-        <option value="">all machines</option>
-        {machines.map((machine) => (
-          <option key={machine} value={machine}>
-            {machine}
-          </option>
-        ))}
-      </select>
-    </div>
+  const [pending, setPending] = useState<Record<string, Field | string[] | undefined>>(
+    {},
   );
 
-  /** A single-value quick filter: "all" clears that dimension's filter. */
-  const quickFilter = (field: Field, label: string): React.ReactElement => {
-    const values = distinctValues(points, field);
-    const current = spec.filters.find((f) => f.field === field);
-    return (
-      <div className="mb-4">
-        <span className={LABEL}>{label}</span>
-        <select
-          className={SELECT}
-          value={current?.values[0] ?? ""}
-          onChange={(event) => {
-            const value = event.target.value;
-            const filters = spec.filters.filter((f) => f.field !== field);
-            if (value !== "") {
-              filters.push({ field, op: "eq", values: [value] });
-            }
-            set({ filters });
-          }}
-        >
-          <option value="">all</option>
-          {values.map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
-      </div>
-    );
-  };
+  const set = (patch: Partial<ChartSpec>): void => onChange({ ...spec, ...patch });
 
   const fieldSelect = (
     label: string,
@@ -140,7 +85,7 @@ export function SpecEditor({
     label?: string,
   ): React.ReactElement => {
     const fields = spec.channels[channel] ?? [];
-    const pendingField = pending[channel];
+    const pendingField = pending[channel] as Field | undefined;
     const options = fields.filter((f) => !spec.seriesKeys.includes(f));
     return (
       <div className="mb-1">
@@ -215,39 +160,6 @@ export function SpecEditor({
     );
   };
 
-  /** Version filter with the special "latest" choice. */
-  const versionFilter = (): React.ReactElement => {
-    const current = spec.filters.find((f) => f.field === "version");
-    const values = distinctValues(points, "version");
-    return (
-      <div className="mb-4">
-        <span className={LABEL}>version</span>
-        <select
-          className={SELECT}
-          value={current?.op === "latest" ? "latest" : (current?.values[0] ?? "")}
-          onChange={(event) => {
-            const picked = event.target.value;
-            const filters = spec.filters.filter((f) => f.field !== "version");
-            if (picked === "latest") {
-              filters.push({ field: "version", op: "latest", values: [] });
-            } else if (picked !== "") {
-              filters.push({ field: "version", op: "eq", values: [picked] });
-            }
-            set({ filters });
-          }}
-        >
-          <option value="">all</option>
-          <option value="latest">latest (per library)</option>
-          {values.map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
-      </div>
-    );
-  };
-
   /** The series source list: chips with remove buttons, plus an add row. */
   const seriesSection = (): React.ReactElement => {
     const [pending, setPending] = useState<Field | undefined>(undefined);
@@ -315,16 +227,151 @@ export function SpecEditor({
     );
   };
 
+  /** The filters group: chips of applied filters, plus add-field/values/add. */
+  const filtersSection = (): React.ReactElement => {
+    const pendingField = pending["__filter"] as Field | undefined;
+    const filteredFields = new Set(spec.filters.map((f) => f.field));
+    const addable = fields.filter((f) => !filteredFields.has(f));
+    const isVersion = pendingField === "version";
+    const pendingValues = pending["__filter_values"] as string[] | undefined;
+
+    return (
+      <div className="mb-4">
+        <span className={LABEL}>filters</span>
+        {spec.filters.length > 0 && (
+          <ul className="mb-2 space-y-1">
+            {spec.filters.map((filter) => (
+              <li
+                key={filter.field}
+                className="flex items-center justify-between rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-200"
+              >
+                <span className="truncate">
+                  {filter.field}:{" "}
+                  {filter.op === "latest"
+                    ? "latest"
+                    : filter.values.join(", ") || "all"}
+                </span>
+                <button
+                  type="button"
+                  aria-label={`remove ${filter.field}`}
+                  className="px-1 text-zinc-500 hover:text-red-400"
+                  onClick={() => {
+                    set({
+                      filters: spec.filters.filter((f) => f.field !== filter.field),
+                    });
+                  }}
+                >
+                  x
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="flex flex-col gap-2">
+          <select
+            className={SELECT}
+            value={pendingField ?? ""}
+            onChange={(event) => {
+              const field = event.target.value;
+              setPending({
+                ...pending,
+                __filter: field === "" ? undefined : field,
+                __filter_values: [],
+              });
+            }}
+          >
+            <option value="">choose a dimension…</option>
+            {addable.map((field) => (
+              <option key={field} value={field}>
+                {field}
+              </option>
+            ))}
+          </select>
+          {pendingField !== undefined &&
+            (isVersion ? (
+              <select
+                className={SELECT}
+                value={pendingValues?.[0] ?? ""}
+                onChange={(event) =>
+                  setPending({
+                    ...pending,
+                    __filter_values:
+                      event.target.value === "" ? [] : [event.target.value],
+                  })
+                }
+              >
+                <option value="">choose…</option>
+                <option value="latest">latest (per library)</option>
+              </select>
+            ) : (
+              <select
+                multiple
+                className={`${SELECT} h-24`}
+                value={pendingValues ?? []}
+                onChange={(event) =>
+                  setPending({
+                    ...pending,
+                    __filter_values: [...event.target.selectedOptions].map(
+                      (option) => option.value,
+                    ),
+                  })
+                }
+              >
+                {distinctValues(points, pendingField).map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            ))}
+          <button
+            type="button"
+            className="rounded border border-blue-500 bg-blue-500/20 px-3 py-1.5 text-xs text-blue-300 disabled:opacity-40"
+            disabled={
+              pendingField === undefined ||
+              (isVersion
+                ? pendingValues?.[0] === undefined
+                : (pendingValues?.length ?? 0) === 0)
+            }
+            onClick={() => {
+              if (pendingField === undefined) return;
+              if (isVersion) {
+                set({
+                  filters: [
+                    ...spec.filters,
+                    { field: pendingField, op: "latest", values: [] },
+                  ],
+                });
+              } else {
+                const values = pendingValues ?? [];
+                if (values.length === 0) return;
+                set({
+                  filters: [
+                    ...spec.filters,
+                    {
+                      field: pendingField,
+                      op: values.length === 1 ? "eq" : "in",
+                      values,
+                    },
+                  ],
+                });
+              }
+              setPending({
+                __filter: undefined,
+                __filter_values: undefined,
+              });
+            }}
+          >
+            add filter
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
-      {machineSelect}
-
-      {quickFilter("impl", "library")}
-      {versionFilter()}
-      {quickFilter("query", "query")}
-      {quickFilter("axis", "scalar axis")}
-      {quickFilter("dataset", "dataset")}
-      {quickFilter("config", "config")}
+      {filtersSection()}
 
       <div className="mb-4">
         <span className={LABEL}>panel key (group charts)</span>

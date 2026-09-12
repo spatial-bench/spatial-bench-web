@@ -238,12 +238,7 @@ function Explorer(): React.ReactElement {
             chart controls
           </summary>
           <div className="px-4 pb-4 pt-1 sm:columns-2 lg:columns-3 [&>div]:break-inside-avoid">
-            <SpecEditor
-              spec={spec}
-              onChange={setSpec}
-              points={points}
-              machines={machines}
-            />
+            <SpecEditor spec={spec} onChange={setSpec} points={points} />
           </div>
         </details>
 
