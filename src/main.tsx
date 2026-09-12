@@ -14,18 +14,16 @@ import { DATASET_BASE, useDataset } from "./hooks/useDataset";
 const queryClient = new QueryClient();
 
 const DEFAULT_SPEC: ChartSpec = {
-  filters: [
-    { field: "query", op: "eq", values: ["exact_nn"] },
-    { field: "config", op: "eq", values: ["default"] },
-  ],
-  chartKey: "dataset",
-  seriesKeys: ["impl", "version"],
-  channels: { colour: "impl", brightness: "version" },
+  filters: [{ field: "config", op: "eq", values: ["default"] }],
+  chartKey: "axis",
+  seriesKeys: ["version", "parallelism"],
+  channels: { colour: "version", lineStyle: "parallelism" },
   x: "tree_size",
   y: "latency_ns",
-  xScale: "linear",
+  xScale: "log",
   yScale: "log",
   dedupe: "latest",
+  panelKey: "query",
 };
 
 /** The spec, hydrated from the URL when one is present. */
@@ -254,13 +252,20 @@ function Explorer(): React.ReactElement {
             </p>
           )}
           {panels.map((panel) => (
-            <section
+            <details
               key={identityLabel(panel.identity)}
-              className="mb-10 border-t border-zinc-800 pt-6 first:border-t-0 first:pt-0"
+              open
+              className="group mb-8 border-t border-zinc-800 pt-4 first:border-t-0"
             >
-              <h2 className="mb-3 text-base font-semibold text-zinc-100">
-                {panelTitle(panel.identity)}
-              </h2>
+              <summary className="flex cursor-pointer list-none items-center justify-between py-2">
+                <h2 className="text-base font-semibold text-zinc-100">
+                  {panelTitle(panel.identity)}
+                </h2>
+                <span className="text-xs text-zinc-500 group-open:hidden">show</span>
+                <span className="hidden text-xs text-zinc-500 group-open:inline">
+                  hide
+                </span>
+              </summary>
               <div className="flex flex-col gap-6">
                 {panel.charts.map((styled) => (
                   <div
@@ -283,7 +288,7 @@ function Explorer(): React.ReactElement {
                   </div>
                 ))}
               </div>
-            </section>
+            </details>
           ))}
         </div>
       </div>

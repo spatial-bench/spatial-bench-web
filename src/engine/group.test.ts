@@ -135,6 +135,27 @@ describe("grouping engine", () => {
     expect(v6?.points[0]?.y).toBe(90);
   });
 
+  test("the latest filter keeps each library's newest version", () => {
+    // kiddo has 5.3.3 and 6.3.0; the latest filter keeps 6.3.0 per library.
+    const latest = applyFilters(points, [
+      { field: "axis", op: "eq", values: ["f64"] },
+      { field: "version", op: "latest", values: [] },
+    ]);
+    const versions = new Set(
+      latest.filter((p) => p.core.impl === "kiddo").map((p) => String(p.core.version)),
+    );
+    expect([...versions]).toEqual(["6.3.0"]);
+  });
+
+  test("latest compares versions numerically, not lexically", () => {
+    const future: ResolvedPoint[] = [
+      point(500, { ...base, tree_size: 65536, version: "10.0.0" }, {}),
+      point(501, { ...base, tree_size: 65536, version: "9.0.0" }, {}),
+    ];
+    const kept = applyFilters(future, [{ field: "version", op: "latest", values: [] }]);
+    expect(kept.every((p) => String(p.core.version) === "10.0.0")).toBe(true);
+  });
+
   test("a panel key groups charts into panels", () => {
     const withPanels = buildPanels(points, { ...spec, panelKey: "axis" });
     expect(withPanels).toHaveLength(1);

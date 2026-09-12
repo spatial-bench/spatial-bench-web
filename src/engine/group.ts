@@ -19,7 +19,43 @@ export function applyFilters(
   points: ResolvedPoint[],
   filters: Filter[],
 ): ResolvedPoint[] {
-  return points.filter((point) => filters.every((f) => filterMatches(point, f)));
+  // Plain comparisons first; then any `latest` filter reduces the surviving
+  // points to each library's highest version — the latest releases of every
+  // relevant library, measured side by side.
+  let out = points.filter((point) =>
+    filters.filter((f) => f.op !== "latest").every((f) => filterMatches(point, f)),
+  );
+  for (const latest of filters.filter((f) => f.op === "latest")) {
+    const field = latest.field;
+    const best = new Map<string, ResolvedPoint>();
+    for (const point of out) {
+      // The library is the unit the version belongs to.
+      const library = fieldValue(point, "impl");
+      const current = best.get(library);
+      const version = fieldValue(point, field);
+      if (
+        current === undefined ||
+        versionCompare(version, fieldValue(current, field)) > 0
+      ) {
+        best.set(library, point);
+      }
+    }
+    const newest = new Set([...best.values()]);
+    out = out.filter((point) => newest.has(point));
+  }
+  return out;
+}
+
+/** Compare dot-separated numeric versions ("6.3.0" vs "10.0.0") properly. */
+export function versionCompare(a: string, b: string): number {
+  const pa = a.split(/[.+\-]/).map(Number);
+  const pb = b.split(/[.+\-]/).map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i += 1) {
+    const na = Number.isFinite(pa[i]) ? (pa[i] ?? 0) : 0;
+    const nb = Number.isFinite(pb[i]) ? (pb[i] ?? 0) : 0;
+    if (na !== nb) return na - nb;
+  }
+  return a.localeCompare(b);
 }
 
 function filterMatches(point: ResolvedPoint, filter: Filter): boolean {
@@ -31,6 +67,9 @@ function filterMatches(point: ResolvedPoint, filter: Filter): boolean {
       return value !== filter.values[0];
     case "in":
       return filter.values.includes(value);
+    // Handled across the whole filtered set by applyFilters, never per point.
+    case "latest":
+      return true;
   }
 }
 

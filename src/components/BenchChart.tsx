@@ -1,4 +1,5 @@
 import { AxisBottom, AxisLeft } from "@visx/axis";
+import { GridRows } from "@visx/grid";
 import { Group } from "@visx/group";
 import { scaleLinear, scaleLog } from "@visx/scale";
 import { LinePath } from "@visx/shape";
@@ -146,6 +147,17 @@ export function BenchChart({
       }}
     >
       <Group left={MARGIN.left} top={MARGIN.top}>
+        {/* The plotting surface: slightly off-white, distinct from the panel
+            around it, with very thin gridlines. */}
+        <rect x={0} y={0} width={innerWidth} height={innerHeight} fill="#e8e8ea" />
+        <GridRows
+          scale={yScale}
+          width={innerWidth}
+          stroke="#c8c8cc"
+          strokeWidth={0.5}
+          numTicks={spec.yScale === "log" ? undefined : 5}
+          tickValues={spec.yScale === "log" ? logTicks(yScale) : undefined}
+        />
         {chart.series.map((series, index) => {
           const style = styleAt(styles, index);
           return (

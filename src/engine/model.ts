@@ -82,8 +82,13 @@ export type XField = "tree_size" | "version" | "started_at";
 export type YField = "latency_ns" | "throughput_qps";
 export type Scale = "log" | "linear";
 
-/** Comparison operators for filters. `in` = any-of (the dropdown case). */
-export type FilterOp = "eq" | "ne" | "in";
+/**
+ * Comparison operators for filters. `in` = any-of (the dropdown case);
+ * `latest` keeps, per library, only the points measured at that library's
+ * highest version present in the filtered set — "latest" in the version
+ * dropdown means "the newest release of each library".
+ */
+export type FilterOp = "eq" | "ne" | "in" | "latest";
 
 export interface Filter {
   field: Field;

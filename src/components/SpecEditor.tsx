@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { distinctValues } from "../engine/group";
 import type { ChartSpec, Field, ResolvedPoint, XField, YField } from "../engine/model";
 
@@ -133,18 +133,6 @@ export function SpecEditor({
     </div>
   );
 
-  const seriesAt = (index: number): Field | undefined => spec.seriesKeys[index];
-
-  const setSeries = (index: number, field: Field | undefined): void => {
-    const keys = [...spec.seriesKeys];
-    if (field === undefined) keys.splice(index, 1);
-    else keys[index] = field;
-    set({
-      seriesKeys: keys,
-      channels: pruneChannels(spec.channels, keys),
-    });
-  };
-
   const channelSelect = (
     label: string,
     channel: "colour" | "brightness" | "lineStyle",
@@ -169,12 +157,113 @@ export function SpecEditor({
     </div>
   );
 
+  /** Version filter with the special "latest" choice. */
+  const versionFilter = (): React.ReactElement => {
+    const current = spec.filters.find((f) => f.field === "version");
+    const values = distinctValues(points, "version");
+    const op = current?.op;
+    return (
+      <div className="mb-4">
+        <span className={LABEL}>version</span>
+        <select
+          className={SELECT}
+          value={op === "latest" ? "latest" : (current?.values[0] ?? "")}
+          onChange={(event) => {
+            const picked = event.target.value;
+            const filters = spec.filters.filter((f) => f.field !== "version");
+            if (picked === "latest") {
+              filters.push({ field: "version", op: "latest", values: [] });
+            } else if (picked !== "") {
+              filters.push({ field: "version", op: "eq", values: [picked] });
+            }
+            set({ filters });
+          }}
+        >
+          <option value="">all</option>
+          <option value="latest">latest (per library)</option>
+          {values.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  };
+
+  /** The series source list: chips with remove buttons, plus an add row. */
+  const seriesSection = (): React.ReactElement => {
+    const [pending, setPending] = useState<Field | undefined>(undefined);
+    const addable = fields.filter((f) => !spec.seriesKeys.includes(f));
+    return (
+      <div className="mb-4">
+        <span className={LABEL}>series (each combination becomes a line)</span>
+        {spec.seriesKeys.length > 0 && (
+          <ul className="mb-2 space-y-1">
+            {spec.seriesKeys.map((key) => (
+              <li
+                key={key}
+                className="flex items-center justify-between rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-200"
+              >
+                <span>{key}</span>
+                <button
+                  type="button"
+                  aria-label={`remove ${key}`}
+                  className="px-1 text-zinc-500 hover:text-red-400"
+                  onClick={() => {
+                    const keys = spec.seriesKeys.filter((k) => k !== key);
+                    set({
+                      seriesKeys: keys,
+                      channels: pruneChannels(spec.channels, keys),
+                    });
+                  }}
+                >
+                  x
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="flex gap-2">
+          <select
+            className={SELECT}
+            value={pending ?? ""}
+            onChange={(event) =>
+              setPending(event.target.value === "" ? undefined : event.target.value)
+            }
+          >
+            <option value="">choose a param…</option>
+            {addable.map((field) => (
+              <option key={field} value={field}>
+                {field}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="shrink-0 rounded border border-blue-500 bg-blue-500/20 px-3 py-1.5 text-xs text-blue-300 disabled:opacity-40"
+            disabled={pending === undefined}
+            onClick={() => {
+              if (pending === undefined || spec.seriesKeys.includes(pending)) {
+                return;
+              }
+              set({ seriesKeys: [...spec.seriesKeys, pending] });
+              setPending(undefined);
+            }}
+          >
+            add
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
       {machineSelect}
 
       {quickFilter("impl", "library")}
-      {quickFilter("version", "version")}
+      {versionFilter()}
       {quickFilter("query", "query")}
       {quickFilter("axis", "scalar axis")}
       {quickFilter("dataset", "dataset")}
@@ -202,28 +291,7 @@ export function SpecEditor({
         )}
       </div>
 
-      {[0, 1].map((index) => (
-        <div className="mb-4" key={index}>
-          <span className={LABEL}>{index === 0 ? "series" : "series 2"}</span>
-          <select
-            className={SELECT}
-            value={seriesAt(index) ?? ""}
-            onChange={(event) =>
-              setSeries(
-                index,
-                event.target.value === "" ? undefined : event.target.value,
-              )
-            }
-          >
-            <option value="">(none)</option>
-            {fields.map((field) => (
-              <option key={field} value={field}>
-                {field}
-              </option>
-            ))}
-          </select>
-        </div>
-      ))}
+      {seriesSection()}
 
       <div className="mb-4">
         <span className={LABEL}>channels</span>
