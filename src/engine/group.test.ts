@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { applyFilters, buildPanels, distinctValues } from "./group";
+import {
+  applyFilters,
+  buildPanels,
+  compareValues,
+  distinctValues,
+} from "./group";
 import type { ChartSpec, Panel, ResolvedPoint } from "./model";
 
 const point = (
@@ -133,6 +138,25 @@ describe("grouping engine", () => {
     const uniform = panel.charts.find((c) => c.identity.dataset === "uniform");
     const v6 = uniform?.series.find((s) => s.identity.version === "6.3.0");
     expect(v6?.points[0]?.y).toBe(90);
+  });
+
+  test("version ordering is semantic: 1.10 sorts after 1.9", () => {
+    expect(compareValues("1.10.0", "1.9.0")).toBeGreaterThan(0);
+    expect(compareValues("1.10", "1.9")).toBeGreaterThan(0);
+    expect(compareValues("2.0.0", "10.0.0")).toBeLessThan(0);
+  });
+
+  test("version dropdown options order semantically", () => {
+    const extra: ResolvedPoint[] = [
+      point(600, { ...base, tree_size: 65536, version: "1.9.0" }, {}),
+      point(601, { ...base, tree_size: 65536, version: "1.10.0" }, {}),
+      point(602, { ...base, tree_size: 65536, version: "1.2.0" }, {}),
+    ];
+    const all = [...points, ...extra];
+    const ordered = distinctValues(all, "version");
+    const idx = (v: string) => ordered.indexOf(v);
+    expect(idx("1.10.0")).toBeGreaterThan(idx("1.9.0"));
+    expect(idx("1.9.0")).toBeGreaterThan(idx("1.2.0"));
   });
 
   test("the latest filter keeps each library's newest version", () => {

@@ -83,7 +83,13 @@ export function distinctValues(points: ResolvedPoint[], field: Field): string[] 
   return [...values].sort(compareValues);
 }
 
+const VERSION_LIKE = /^\d+(\.\d+)+$/;
+
 export function compareValues(a: string, b: string): number {
+  // Dot-separated numeric versions order semantically: 1.10 > 1.9.
+  if (VERSION_LIKE.test(a) && VERSION_LIKE.test(b)) {
+    return versionCompare(a, b);
+  }
   const na = Number(a);
   const nb = Number(b);
   if (!Number.isNaN(na) && !Number.isNaN(nb) && a !== "" && b !== "") {
@@ -192,7 +198,7 @@ function seriesPoints(points: ResolvedPoint[], spec: ChartSpec): Series["points"
       const na = Number(a.x);
       const nb = Number(b.x);
       if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
-      return String(a.x).localeCompare(String(b.x));
+      return compareValues(String(a.x), String(b.x));
     });
 }
 
