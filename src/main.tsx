@@ -204,7 +204,8 @@ function Explorer(): React.ReactElement {
 
   // Hooks stay unconditional: the chart area's measured width is needed in
   // every render, loading or not.
-  const { ref: chartsRef, width: chartWidth } = useContainerWidth(760);
+  // Charts go as wide as the container allows, capped for sanity.
+  const { ref: chartsRef, width: chartWidth } = useContainerWidth(1024);
   // Taller charts earn their space on desktop; mobile keeps them compact.
   const chartHeight = chartWidth > 560 ? 320 : 260;
 

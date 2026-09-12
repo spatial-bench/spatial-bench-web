@@ -18,7 +18,8 @@ export interface BenchChartProps {
   onSelect: (point: ResolvedPoint | null) => void;
 }
 
-const MARGIN = { top: 12, right: 16, bottom: 36, left: 70 };
+const MARGIN = { top: 12, right: 16, bottom: 46, left: 70 };
+const SNAP_PX = 24;
 const BRIGHTNESS_OPACITY = [1, 0.7, 0.45, 0.3];
 
 /**
@@ -182,28 +183,46 @@ export function BenchChart({
               return null;
             const isSelected = selected?.id === p.point.id;
             return (
-              <MarkerGlyph
-                key={identityKey(series.identity) + "-" + String(p.point.id)}
-                shape={MARKER_SHAPES[style.marker] ?? "circle"}
-                cx={cx}
-                cy={cy}
-                r={isSelected ? 5 : 3.5}
-                fill={style.colour}
-                opacity={(BRIGHTNESS_OPACITY[style.brightness] ?? 1) * 0.9}
-                selected={isSelected}
-                onHover={() => setHover({ x: cx, y: cy, point: p.point })}
-                onSelect={() => {
-                  if (isSelected) onSelect(null);
-                  else {
-                    setHover({ x: cx, y: cy, point: p.point });
-                    onSelect(p.point);
-                  }
-                }}
-              />
+              <g key={identityKey(series.identity) + "-" + String(p.point.id)}>
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={SNAP_PX / 2}
+                  fill="transparent"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onSelect(isSelected ? null : p.point);
+                  }}
+                />
+                <MarkerGlyph
+                  shape={MARKER_SHAPES[style.marker] ?? "circle"}
+                  cx={cx}
+                  cy={cy}
+                  r={isSelected ? 5 : 3.5}
+                  fill={style.colour}
+                  opacity={(BRIGHTNESS_OPACITY[style.brightness] ?? 1) * 0.9}
+                  selected={isSelected}
+                  onHover={() => {}}
+                  onSelect={() => {
+                    if (isSelected) onSelect(null);
+                    else {
+                      setHover({ x: cx, y: cy, point: p.point });
+                      onSelect(p.point);
+                    }
+                  }}
+                />
+              </g>
             );
           }),
         )}
-        {hover && <HoverBadge hover={hover} innerWidth={innerWidth} />}
+        {hover && (
+          <HoverBadge
+            hover={hover}
+            innerWidth={innerWidth}
+            innerHeight={innerHeight}
+            spec={spec}
+          />
+        )}
         <AxisBottom
           scale={xScale}
           top={innerHeight}
@@ -317,38 +336,63 @@ function identityKey(identity: Record<string, string>): string {
 function HoverBadge({
   hover,
   innerWidth,
+  innerHeight,
+  spec,
 }: {
   hover: Hover;
   innerWidth: number;
+  innerHeight: number;
+  spec: ChartSpec;
 }): React.ReactElement {
-  const value = hover.point.medianNs ?? hover.point.latencyNs;
+  const point = hover.point;
+  const value = point.medianNs ?? point.latencyNs;
+  const width = 220;
+  const x = Math.min(Math.max(hover.x + 12, 4), innerWidth - width - 4);
+  const rows: [string, string][] = [
+    ["tree size", formatX(Number(point.core.tree_size), spec)],
+    [
+      "latency",
+      `${formatNs(value)} ±${formatNs(
+        (point.latencyUpper ?? value) - (point.latencyLower ?? value),
+      )}`,
+    ],
+    ["samples", String(point.samples ?? "?")],
+    ["config", String(point.core.config)],
+    ["parallelism", String(point.core.parallelism)],
+    ["batching", String(point.core.query_batching)],
+  ];
+  const height = 22 + rows.length * 15;
+  const y = Math.max(Math.min(hover.y - height / 2, innerHeight - height - 4), 4);
   return (
     <g>
       <rect
-        x={Math.min(hover.x + 10, innerWidth - 160)}
-        y={Math.max(hover.y - 48, 0)}
-        width={150}
-        height={40}
+        x={x}
+        y={y}
+        width={width}
+        height={height}
         rx={4}
-        fill="#18181b"
+        fill="#101013"
         stroke="#3f3f46"
       />
-      <text
-        x={Math.min(hover.x + 18, innerWidth - 152)}
-        y={Math.max(hover.y - 22, 20)}
-        fill="#fafafa"
-        fontSize={11}
-      >
-        {formatNs(value)}
+      <text x={x + 10} y={y + 16} fill="#fafafa" fontSize={11} fontWeight={600}>
+        {String(point.core.impl)} {String(point.core.version)}
       </text>
-      <text
-        x={Math.min(hover.x + 18, innerWidth - 152)}
-        y={Math.max(hover.y - 10, 32)}
-        fill="#a1a1aa"
-        fontSize={10}
-      >
-        {String(hover.point.core.impl)} {String(hover.point.core.version)}
-      </text>
+      {rows.map(([label, text], index) => (
+        <g key={label}>
+          <text x={x + 10} y={y + 32 + index * 15} fill="#a1a1aa" fontSize={10}>
+            {label}
+          </text>
+          <text
+            x={x + width - 10}
+            y={y + 32 + index * 15}
+            fill="#e4e4e7"
+            fontSize={10}
+            textAnchor="end"
+          >
+            {text}
+          </text>
+        </g>
+      ))}
     </g>
   );
 }
