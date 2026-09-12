@@ -103,10 +103,18 @@ export interface Filter {
  * unassigned means that dimension is not drawn — it collapses into the
  * series identity and the legend only.
  */
+/**
+ * Visual channels: each holds one or more series fields, and every
+ * combination of those fields' values gets its own visual treatment
+ * (a colour, a brightness step, a dash pattern, a marker shape, a line
+ * width). Colour = library, line style = parallelism, etc.
+ */
 export interface Channels {
-  colour?: Field;
-  brightness?: Field;
-  lineStyle?: Field;
+  colour?: Field[];
+  brightness?: Field[];
+  lineStyle?: Field[];
+  marker?: Field[];
+  width?: Field[];
 }
 
 export interface ChartSpec {

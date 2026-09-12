@@ -30,7 +30,7 @@ describe("BenchChart rendered against the live snapshot", () => {
       panelKey: "query",
       chartKey: "axis",
       seriesKeys: ["version", "parallelism"],
-      channels: { colour: "impl", brightness: "version" },
+      channels: { colour: ["impl"], brightness: ["version"] },
       x: "tree_size",
       y: "latency_ns",
       xScale: "log",

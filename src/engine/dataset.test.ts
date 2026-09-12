@@ -60,7 +60,7 @@ describe("the dataset loader against a real collated snapshot", () => {
       ],
       chartKey: "dataset",
       seriesKeys: ["version"],
-      channels: { colour: "version" },
+      channels: { colour: ["version"] },
       x: "tree_size",
       y: "latency_ns",
       xScale: "linear",

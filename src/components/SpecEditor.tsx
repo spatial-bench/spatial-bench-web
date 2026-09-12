@@ -49,6 +49,7 @@ export function SpecEditor({
   machines,
 }: SpecEditorProps): React.ReactElement {
   const fields = useMemo(() => fieldOptions(points), [points]);
+  const [pending, setPending] = useState<Record<string, Field | undefined>>({});
 
   const set = (patch: Partial<ChartSpec>): void => onChange({ ...spec, ...patch });
 
@@ -133,41 +134,97 @@ export function SpecEditor({
     </div>
   );
 
-  const channelSelect = (
-    label: string,
-    channel: "colour" | "brightness" | "lineStyle",
-  ): React.ReactElement => (
-    <div>
-      <span className={LABEL}>{label}</span>
-      <select
-        className={SELECT}
-        value={spec.channels[channel] ?? ""}
-        onChange={(event) => {
-          const field = event.target.value === "" ? undefined : event.target.value;
-          set({ channels: { ...spec.channels, [channel]: field } });
-        }}
-      >
-        <option value="">(none)</option>
-        {spec.seriesKeys.map((key) => (
-          <option key={key} value={key}>
-            {key}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
+  /** One channel: its source fields as chips, plus a dropdown + add. */
+  const channelSection = (
+    channel: keyof ChartSpec["channels"],
+    label?: string,
+  ): React.ReactElement => {
+    const fields = spec.channels[channel] ?? [];
+    const pendingField = pending[channel];
+    const options = fields.filter((f) => !spec.seriesKeys.includes(f));
+    return (
+      <div className="mb-1">
+        <span className={LABEL}>
+          {label ?? channel}
+          {fields.length > 0 && (
+            <span className="ml-1 text-zinc-500">({fields.join(" + ")})</span>
+          )}
+        </span>
+        {fields.length > 0 && (
+          <ul className="mb-2 space-y-1">
+            {fields.map((field) => (
+              <li
+                key={field}
+                className="flex items-center justify-between rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-200"
+              >
+                <span>{field}</span>
+                <button
+                  type="button"
+                  aria-label={`remove ${field}`}
+                  className="px-1 text-zinc-500 hover:text-red-400"
+                  onClick={() => {
+                    const next = fields.filter((f) => f !== field);
+                    set({ channels: { ...spec.channels, [channel]: next } });
+                  }}
+                >
+                  x
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="flex gap-2">
+          <select
+            className={SELECT}
+            value={pendingField ?? ""}
+            onChange={(event) =>
+              setPending({
+                ...pending,
+                [channel]: event.target.value === "" ? undefined : event.target.value,
+              })
+            }
+          >
+            <option value="">choose a param…</option>
+            {options.map((field) => (
+              <option key={field} value={field}>
+                {field}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="shrink-0 rounded border border-blue-500 bg-blue-500/20 px-3 py-1.5 text-xs text-blue-300 disabled:opacity-40"
+            disabled={pendingField === undefined}
+            onClick={() => {
+              if (pendingField === undefined || fields.includes(pendingField)) {
+                return;
+              }
+              set({
+                channels: {
+                  ...spec.channels,
+                  [channel]: [...fields, pendingField],
+                },
+              });
+              setPending({ ...pending, [channel]: undefined });
+            }}
+          >
+            add
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   /** Version filter with the special "latest" choice. */
   const versionFilter = (): React.ReactElement => {
     const current = spec.filters.find((f) => f.field === "version");
     const values = distinctValues(points, "version");
-    const op = current?.op;
     return (
       <div className="mb-4">
         <span className={LABEL}>version</span>
         <select
           className={SELECT}
-          value={op === "latest" ? "latest" : (current?.values[0] ?? "")}
+          value={current?.op === "latest" ? "latest" : (current?.values[0] ?? "")}
           onChange={(event) => {
             const picked = event.target.value;
             const filters = spec.filters.filter((f) => f.field !== "version");
@@ -294,11 +351,13 @@ export function SpecEditor({
       {seriesSection()}
 
       <div className="mb-4">
-        <span className={LABEL}>channels</span>
-        <div className="grid grid-cols-1 gap-2">
-          {channelSelect("colour", "colour")}
-          {channelSelect("brightness", "brightness")}
-          {channelSelect("line style", "lineStyle")}
+        <span className={LABEL}>channels (each value combination gets its own)</span>
+        <div className="grid grid-cols-1 gap-3">
+          {channelSection("colour")}
+          {channelSection("brightness")}
+          {channelSection("lineStyle", "line style")}
+          {channelSection("marker")}
+          {channelSection("width", "line width")}
         </div>
       </div>
 
@@ -395,12 +454,9 @@ function pruneChannels(
 ): ChartSpec["channels"] {
   const kept = new Set(keys);
   const out: ChartSpec["channels"] = {};
-  if (channels.colour && kept.has(channels.colour)) out.colour = channels.colour;
-  if (channels.brightness && kept.has(channels.brightness)) {
-    out.brightness = channels.brightness;
-  }
-  if (channels.lineStyle && kept.has(channels.lineStyle)) {
-    out.lineStyle = channels.lineStyle;
+  for (const key of Object.keys(channels) as (keyof ChartSpec["channels"])[]) {
+    const fields = channels[key];
+    if (fields && fields.some((f) => kept.has(f))) out[key] = fields;
   }
   return out;
 }

@@ -5,7 +5,7 @@ import { scaleLinear, scaleLog } from "@visx/scale";
 import { LinePath } from "@visx/shape";
 import type { NumberValue } from "d3-scale";
 import { useMemo, useRef, useState } from "react";
-import type { SeriesStyle } from "../engine/group";
+import { MARKER_SHAPES, type SeriesStyle } from "../engine/group";
 import type { Chart, ChartSpec, ResolvedPoint } from "../engine/model";
 
 export interface BenchChartProps {
@@ -168,7 +168,7 @@ export function BenchChart({
               y={(p) => yScale(p.y)}
               stroke={style.colour}
               strokeOpacity={BRIGHTNESS_OPACITY[style.brightness] ?? 1}
-              strokeWidth={2}
+              strokeWidth={style.width}
               strokeDasharray={style.dash || undefined}
             />
           );
@@ -182,21 +182,22 @@ export function BenchChart({
               return null;
             const isSelected = selected?.id === p.point.id;
             return (
-              <circle
+              <MarkerGlyph
                 key={identityKey(series.identity) + "-" + String(p.point.id)}
+                shape={MARKER_SHAPES[style.marker] ?? "circle"}
                 cx={cx}
                 cy={cy}
-                r={isSelected ? 5.5 : 3.5}
+                r={isSelected ? 5 : 3.5}
                 fill={style.colour}
                 opacity={(BRIGHTNESS_OPACITY[style.brightness] ?? 1) * 0.9}
-                stroke={isSelected ? "#ffffff" : "none"}
-                strokeWidth={isSelected ? 2 : 0}
-                className="cursor-pointer"
-                onMouseEnter={() => setHover({ x: cx, y: cy, point: p.point })}
-                onMouseLeave={() => setHover(null)}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onSelect(isSelected ? null : p.point);
+                selected={isSelected}
+                onHover={() => setHover({ x: cx, y: cy, point: p.point })}
+                onSelect={() => {
+                  if (isSelected) onSelect(null);
+                  else {
+                    setHover({ x: cx, y: cy, point: p.point });
+                    onSelect(p.point);
+                  }
                 }}
               />
             );
@@ -229,6 +230,63 @@ export function BenchChart({
   );
 }
 
+/** The point glyph for a series' marker shape. */
+function MarkerGlyph(props: {
+  shape: string;
+  cx: number;
+  cy: number;
+  r: number;
+  fill: string;
+  opacity: number;
+  selected: boolean;
+  onSelect: () => void;
+  onHover: () => void;
+}): React.ReactElement {
+  const { shape, cx, cy, r, fill, opacity, selected, onSelect, onHover } = props;
+  const common = {
+    fill,
+    opacity,
+    stroke: selected ? "#ffffff" : "none",
+    strokeWidth: selected ? 2 : 0,
+    className: "cursor-pointer",
+    onMouseEnter: onHover,
+    onClick: (event: React.MouseEvent) => {
+      event.stopPropagation();
+      onSelect();
+    },
+  };
+  switch (shape) {
+    case "square":
+      return <rect x={cx - r} y={cy - r} width={2 * r} height={2 * r} {...common} />;
+    case "diamond":
+      return (
+        <polygon
+          points={`${cx},${cy - r} ${cx + r},${cy} ${cx},${cy + r} ${cx - r},${cy}`}
+          {...common}
+        />
+      );
+    case "triangle":
+      return (
+        <polygon
+          points={`${cx},${cy - r} ${cx + r},${cy + r} ${cx - r},${cy + r}`}
+          {...common}
+        />
+      );
+    case "cross":
+      return (
+        <path
+          d={`M ${cx - r} ${cy - r} L ${cx + r} ${cy + r} M ${cx - r} ${cy + r} L ${cx + r} ${cy - r}`}
+          stroke={fill}
+          strokeWidth={2}
+          opacity={opacity}
+          fill="none"
+        />
+      );
+    default:
+      return <circle cx={cx} cy={cy} r={r} {...common} />;
+  }
+}
+
 interface Hover {
   x: number;
   y: number;
@@ -241,7 +299,15 @@ interface Zoom {
 }
 
 function styleAt(styles: SeriesStyle[], index: number): SeriesStyle {
-  return styles[index] ?? { colour: "#60a5fa", brightness: 0, dash: "" };
+  return (
+    styles[index] ?? {
+      colour: "#60a5fa",
+      brightness: 0,
+      dash: "",
+      marker: 0,
+      width: 2,
+    }
+  );
 }
 
 function identityKey(identity: Record<string, string>): string {

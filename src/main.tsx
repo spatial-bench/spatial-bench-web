@@ -17,7 +17,7 @@ const DEFAULT_SPEC: ChartSpec = {
   filters: [{ field: "config", op: "eq", values: ["default"] }],
   chartKey: "axis",
   seriesKeys: ["version", "parallelism"],
-  channels: { colour: "version", lineStyle: "parallelism" },
+  channels: { colour: ["version"], lineStyle: ["parallelism"] },
   x: "tree_size",
   y: "latency_ns",
   xScale: "log",
@@ -82,10 +82,12 @@ function ChartLegend(props: {
   const { chart, styles } = wrapper;
   if (chart.series.length === 0) return <></>;
   const channelKeys = [
-    spec.channels.colour,
-    spec.channels.brightness,
-    spec.channels.lineStyle,
-  ].filter(Boolean) as string[];
+    ...(spec.channels.colour ?? []),
+    ...(spec.channels.brightness ?? []),
+    ...(spec.channels.lineStyle ?? []),
+    ...(spec.channels.marker ?? []),
+    ...(spec.channels.width ?? []),
+  ];
   return (
     <div className="mb-1 flex flex-wrap gap-x-4 gap-y-1 text-xs">
       {chart.series.map((series, index) => {

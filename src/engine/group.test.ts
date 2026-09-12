@@ -90,7 +90,7 @@ describe("grouping engine", () => {
     filters: [{ field: "axis", op: "eq", values: ["f64"] }],
     chartKey: "dataset",
     seriesKeys: ["impl", "version"],
-    channels: { colour: "impl", brightness: "version" },
+    channels: { colour: ["impl"], brightness: ["version"] },
     x: "tree_size",
     y: "latency_ns",
     xScale: "linear",

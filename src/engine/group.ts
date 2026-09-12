@@ -1,3 +1,4 @@
+import { coerce, compare } from "semver";
 import type { ChartSpec, Field, Filter, Panel, ResolvedPoint, Series } from "./model";
 import { isCoreField } from "./model";
 
@@ -48,13 +49,9 @@ export function applyFilters(
 
 /** Compare dot-separated numeric versions ("6.3.0" vs "10.0.0") properly. */
 export function versionCompare(a: string, b: string): number {
-  const pa = a.split(/[.+\-]/).map(Number);
-  const pb = b.split(/[.+\-]/).map(Number);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i += 1) {
-    const na = Number.isFinite(pa[i]) ? (pa[i] ?? 0) : 0;
-    const nb = Number.isFinite(pb[i]) ? (pb[i] ?? 0) : 0;
-    if (na !== nb) return na - nb;
-  }
+  const va = coerce(a);
+  const vb = coerce(b);
+  if (va !== null && vb !== null) return compare(va, vb);
   return a.localeCompare(b);
 }
 
@@ -250,41 +247,66 @@ export const COLOUR_PALETTE = [
 ];
 
 export const DASH_PATTERNS = ["", "6 3", "2 3", "8 3 2 3", "12 3 2 3 2 3"];
+/** Opacity steps for the brightness channel: 0 = full brightness. */
+export const BRIGHTNESS_OPACITY = [1, 0.7, 0.45, 0.3];
 
 export interface SeriesStyle {
   colour: string;
   /** 0 = full brightness, up to the number of brightness steps. */
   brightness: number;
   dash: string;
+  /** Index into MARKER_SHAPES — the point glyph this series draws. */
+  marker: number;
+  /** Stroke width step for the polyline. */
+  width: number;
+}
+
+export const MARKER_SHAPES = [
+  "circle",
+  "square",
+  "diamond",
+  "triangle",
+  "cross",
+] as const;
+export const WIDTH_STEPS = [1.5, 2.5, 3.5, 4.5];
+
+/**
+ * One channel's combos, ordered field-wise, and a lookup for a series. Each
+ * combination of the channel's fields' values gets its own visual treatment.
+ */
+function channelIndexer(
+  fields: Field[] | undefined,
+  series: Series[],
+): (identity: Record<string, string>) => number {
+  if (!fields || fields.length === 0) return () => 0;
+  const comboOf = (identity: Record<string, string>): string =>
+    fields.map((f) => identity[f] ?? "").join("\u0000");
+  const combos = [...new Set(series.map((s) => comboOf(s.identity)))];
+  combos.sort((a, b) => {
+    const pa = a.split("\u0000");
+    const pb = b.split("\u0000");
+    for (let i = 0; i < Math.min(pa.length, pb.length); i += 1) {
+      const order = compareValues(pa[i] ?? "", pb[i] ?? "");
+      if (order !== 0) return order;
+    }
+    return 0;
+  });
+  const indexOf = new Map(combos.map((combo, index) => [combo, index]));
+  return (identity: Record<string, string>) =>
+    Math.max(0, indexOf.get(comboOf(identity)) ?? 0);
 }
 
 export function assignStyles(series: Series[], spec: ChartSpec): SeriesStyle[] {
-  const colourValues = spec.channels.colour
-    ? [...new Set(series.map((s) => s.identity[spec.channels.colour ?? ""]))]
-    : [];
-  const brightnessValues = spec.channels.brightness
-    ? [...new Set(series.map((s) => s.identity[spec.channels.brightness ?? ""]))]
-    : [];
-  const dashValues = spec.channels.lineStyle
-    ? [...new Set(series.map((s) => s.identity[spec.channels.lineStyle ?? ""]))]
-    : [];
-
-  return series.map((s) => {
-    const colourIndex = spec.channels.colour
-      ? Math.max(0, colourValues.indexOf(s.identity[spec.channels.colour]))
-      : 0;
-    const colour =
-      COLOUR_PALETTE[colourIndex % COLOUR_PALETTE.length] ?? COLOUR_PALETTE[0]!;
-    const brightness = spec.channels.brightness
-      ? Math.max(0, brightnessValues.indexOf(s.identity[spec.channels.brightness]))
-      : 0;
-    const dashIndex = spec.channels.lineStyle
-      ? Math.max(0, dashValues.indexOf(s.identity[spec.channels.lineStyle]))
-      : 0;
-    return {
-      colour,
-      brightness,
-      dash: DASH_PATTERNS[dashIndex % DASH_PATTERNS.length] ?? "",
-    };
-  });
+  const colour = channelIndexer(spec.channels.colour, series);
+  const brightness = channelIndexer(spec.channels.brightness, series);
+  const lineStyle = channelIndexer(spec.channels.lineStyle, series);
+  const marker = channelIndexer(spec.channels.marker, series);
+  const width = channelIndexer(spec.channels.width, series);
+  return series.map((s) => ({
+    colour: COLOUR_PALETTE[colour(s.identity) % COLOUR_PALETTE.length]!,
+    brightness: brightness(s.identity) % (BRIGHTNESS_OPACITY.length - 1),
+    dash: DASH_PATTERNS[lineStyle(s.identity) % DASH_PATTERNS.length] ?? "",
+    marker: marker(s.identity) % MARKER_SHAPES.length,
+    width: WIDTH_STEPS[width(s.identity) % WIDTH_STEPS.length] ?? 2,
+  }));
 }

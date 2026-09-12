@@ -24,7 +24,8 @@
     "d3-scale": "^4.0.2",
     "d3-shape": "^3.2.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "semver": "^7.8.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",
@@ -35,6 +36,7 @@
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
+    "@types/semver": "^7.8.0",
     "@vitejs/plugin-react": "^6.1.1",
     "codec": "^0.0.3",
     "jsdom": "^30.0.1",
