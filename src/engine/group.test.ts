@@ -1,10 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  applyFilters,
-  buildPanels,
-  compareValues,
-  distinctValues,
-} from "./group";
+import { applyFilters, buildPanels, compareValues, distinctValues } from "./group";
 import type { ChartSpec, Panel, ResolvedPoint } from "./model";
 
 const point = (
