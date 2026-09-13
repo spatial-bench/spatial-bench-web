@@ -33,6 +33,7 @@ const base = {
   dims: 3,
   metric: "squared_euclidean",
   dataset: "uniform",
+  language: "rust",
   parallelism: "single_threaded",
   query_batching: "single_query",
   isa: "native",

@@ -178,6 +178,7 @@ async function loadSqlite(): Promise<Sqlite3> {
 const CORE_COLUMNS = [
   "impl",
   "version",
+  "language",
   "axis",
   "query",
   "k",
@@ -216,7 +217,7 @@ export async function loadDataset(
   const points: ResolvedPoint[] = [];
   for (const row of db.select(
     `SELECT p.id, p.run_id, r.machine_hash, r.started_at,
-            p.impl, p.version, p.axis, p.query, p.k, p.dims, p.metric,
+            p.impl, p.version, p.language, p.axis, p.query, p.k, p.dims, p.metric,
             p.dataset, p.parallelism, p.query_batching, p.isa, p.config,
             p.tree_size, p.query_count, p.query_batch_size,
             p.latency_ns, p.latency_ns_lower, p.latency_ns_upper,

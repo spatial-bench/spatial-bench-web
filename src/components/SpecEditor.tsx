@@ -14,6 +14,7 @@ export function fieldOptions(points: ResolvedPoint[]): Field[] {
     "machine_hash",
     "impl",
     "version",
+    "language",
     "axis",
     "query",
     "k",

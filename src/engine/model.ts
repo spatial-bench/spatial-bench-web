@@ -16,6 +16,7 @@
 export type CoreField =
   | "impl"
   | "version"
+  | "language"
   | "axis"
   | "query"
   | "k"
@@ -41,6 +42,7 @@ export const isCoreField = (f: Field): f is CoreField =>
 const CORE_FIELDS: ReadonlySet<string> = new Set([
   "impl",
   "version",
+  "language",
   "axis",
   "query",
   "k",
