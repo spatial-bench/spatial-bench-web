@@ -86,7 +86,9 @@ export function SpecEditor({
   ): React.ReactElement => {
     const fields = spec.channels[channel] ?? [];
     const pendingField = pending[channel] as Field | undefined;
-    const options = fields.filter((f) => !spec.seriesKeys.includes(f));
+    // A channel dimension must be a series dimension (the series identity is
+    // what the style lookup reads); offer those not already in this channel.
+    const options = spec.seriesKeys.filter((f) => !fields.includes(f));
     return (
       <div className="mb-1">
         <span className={LABEL}>

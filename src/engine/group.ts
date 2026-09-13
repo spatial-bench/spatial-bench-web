@@ -28,21 +28,23 @@ export function applyFilters(
   );
   for (const latest of filters.filter((f) => f.op === "latest")) {
     const field = latest.field;
-    const best = new Map<string, ResolvedPoint>();
+    // Per library: the highest version present. Then keep every point at
+    // that version — not a single representative point.
+    const best = new Map<string, string>();
     for (const point of out) {
-      // The library is the unit the version belongs to.
       const library = fieldValue(point, "impl");
-      const current = best.get(library);
       const version = fieldValue(point, field);
-      if (
-        current === undefined ||
-        versionCompare(version, fieldValue(current, field)) > 0
-      ) {
-        best.set(library, point);
+      const current = best.get(library);
+      if (current === undefined || versionCompare(version, current) > 0) {
+        best.set(library, version);
       }
     }
-    const newest = new Set([...best.values()]);
-    out = out.filter((point) => newest.has(point));
+    out = out.filter((point) => {
+      const library = fieldValue(point, "impl");
+      const version = fieldValue(point, field);
+      const newest = best.get(library);
+      return newest !== undefined && versionCompare(version, newest) === 0;
+    });
   }
   return out;
 }

@@ -154,6 +154,17 @@ describe("grouping engine", () => {
     expect(idx("1.9.0")).toBeGreaterThan(idx("1.2.0"));
   });
 
+  test("latest keeps every point at the newest version, not one per library", () => {
+    // 6.3.0 has points at three tree sizes; all must survive the filter.
+    const kept = applyFilters(points, [
+      { field: "axis", op: "eq", values: ["f64"] },
+      { field: "query", op: "eq", values: ["exact_nn"] },
+      { field: "version", op: "latest", values: [] },
+    ]);
+    const kiddo = kept.filter((p) => String(p.core.version) === "6.3.0");
+    expect(kiddo.length).toBeGreaterThanOrEqual(3);
+  });
+
   test("the latest filter keeps each library's newest version", () => {
     // kiddo has 5.3.3 and 6.3.0; the latest filter keeps 6.3.0 per library.
     const latest = applyFilters(points, [
