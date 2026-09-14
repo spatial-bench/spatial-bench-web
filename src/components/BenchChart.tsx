@@ -64,20 +64,26 @@ export function BenchChart({
         : scaleLinear({ domain: xDomain, range: [0, innerWidth], clamp: true }),
     [xDomain, innerWidth, spec.xScale],
   );
-  const yScale = useMemo(
-    () =>
-      spec.yScale === "log"
-        ? scaleLog({
-            domain: [Math.max(yBounds[0], Number.MIN_VALUE), yBounds[1]],
-            range: [innerHeight, 0],
-            clamp: true,
-          })
-        : scaleLinear({
-            domain: [0, yBounds[1] * 1.08],
-            range: [innerHeight, 0],
-          }),
-    [yBounds, innerHeight, innerWidth, spec.yScale],
-  );
+  const yScale = useMemo(() => {
+    const [yMin, yMax] = yBounds;
+    if (spec.yScale === "log") {
+      // Pad the domain so the extreme points clear the top and bottom
+      // edges by ~5px instead of touching them.
+      const logMin = Math.log10(Math.max(yMin, Number.MIN_VALUE));
+      const logMax = Math.log10(Math.max(yMax, yMin * 1.001));
+      const pad = (5 / innerHeight) * (logMax - logMin);
+      return scaleLog({
+        domain: [10 ** (logMin - pad), 10 ** (logMax + pad)],
+        range: [innerHeight, 0],
+        clamp: true,
+      });
+    }
+    // Linear: ~5px of headroom above the highest point.
+    return scaleLinear({
+      domain: [0, yMax * (innerHeight / Math.max(innerHeight - 5, 1))],
+      range: [innerHeight, 0],
+    });
+  }, [yBounds, innerHeight, spec.yScale]);
 
   const onPointerDown = (event: React.PointerEvent): void => {
     if (event.button === 0)

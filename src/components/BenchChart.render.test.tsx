@@ -18,7 +18,7 @@ import { BenchChart } from "./BenchChart";
 let points: ResolvedPoint[];
 
 beforeAll(async () => {
-  const bytes = new Uint8Array(readFileSync("/tmp/r2-live.sqlite"));
+  const bytes = new Uint8Array(readFileSync(".fixture/benchmarks-test.sqlite"));
   const db = await openInMemory(bytes);
   ({ points } = await loadDataset(db));
 }, 30_000);
