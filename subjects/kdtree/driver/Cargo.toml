@@ -1,0 +1,15 @@
+[package]
+name = "spatial-bench-kdtree"
+description = "spatial-bench driver for the kdtree crate"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82.0"
+license = "MIT OR Apache-2.0"
+
+# Not a member of the bencher workspace: the CLI builds this on demand. The
+# kdtree crate contributes only its public API through the macro expansion;
+# it never depends on this crate.
+
+[dependencies]
+spatial-bench-core = { version = "0.1.0" }
+spatial-bench-measure = { version = "0.1.0" }

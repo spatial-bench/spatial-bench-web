@@ -178,6 +178,38 @@ function PointDetail({ point }: { point: ResolvedPoint }): React.ReactElement {
   );
 }
 
+function ChartCard(props: {
+  styled: { chart: Chart; styles: SeriesStyle[] };
+  spec: ChartSpec;
+  selected: ResolvedPoint | null;
+  onSelect: (point: ResolvedPoint | null) => void;
+}): React.ReactElement {
+  const { styled, spec, selected, onSelect } = props;
+  // Measure inside the card's padding: the svg can never overflow the card,
+  // whatever chrome it gains.
+  const { ref, width } = useContainerWidth(1024);
+  const height = width > 560 ? 320 : 260;
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+      <h3 className="mb-1 text-xs font-medium text-zinc-300">
+        {panelTitle(styled.chart.identity)}
+      </h3>
+      <ChartLegend wrapper={styled} spec={spec} />
+      <div ref={ref}>
+        <BenchChart
+          chart={styled.chart}
+          spec={spec}
+          styles={styled.styles}
+          width={width}
+          height={height}
+          selected={selected}
+          onSelect={onSelect}
+        />
+      </div>
+    </div>
+  );
+}
+
 function Explorer(): React.ReactElement {
   const query = useDataset();
   const [selected, setSelected] = useState<ResolvedPoint | null>(null);
@@ -205,10 +237,6 @@ function Explorer(): React.ReactElement {
   // Hooks stay unconditional: the chart area's measured width is needed in
   // every render, loading or not.
   // Charts go as wide as the container allows, capped for sanity.
-  const { ref: chartsRef, width: chartWidth } = useContainerWidth(1024);
-  // Taller charts earn their space on desktop; mobile keeps them compact.
-  const chartHeight = chartWidth > 560 ? 320 : 260;
-
   if (query.isPending) {
     return <p className="p-8 text-zinc-400">loading dataset…</p>;
   }
@@ -243,7 +271,7 @@ function Explorer(): React.ReactElement {
           </div>
         </details>
 
-        <div ref={chartsRef}>
+        <div>
           {panels.length === 0 && (
             <p className="text-zinc-500">
               the current filters match no points — loosen something
@@ -266,24 +294,13 @@ function Explorer(): React.ReactElement {
               </summary>
               <div className="flex flex-col gap-6">
                 {panel.charts.map((styled) => (
-                  <div
+                  <ChartCard
                     key={identityLabel(styled.chart.identity)}
-                    className="rounded-lg border border-zinc-800 bg-zinc-900 p-3"
-                  >
-                    <h3 className="mb-1 text-xs font-medium text-zinc-300">
-                      {panelTitle(styled.chart.identity)}
-                    </h3>
-                    <ChartLegend wrapper={styled} spec={spec} />
-                    <BenchChart
-                      chart={styled.chart}
-                      spec={spec}
-                      styles={styled.styles}
-                      width={chartWidth}
-                      height={chartHeight}
-                      selected={selected}
-                      onSelect={setSelected}
-                    />
-                  </div>
+                    styled={styled}
+                    spec={spec}
+                    selected={selected}
+                    onSelect={setSelected}
+                  />
                 ))}
               </div>
             </details>
