@@ -253,7 +253,7 @@ accepts an unprefixed 64-character hex digest but rejects the `sha256:` prefix;
 the emitted provenance uses the prefix. Preserve the distinction when reviewing
 manifest pins and run records.
 [Source preparation](https://github.com/spatial-bench/spatial-bench-core/blob/2104bfe8b2ba04c31ee484e9a9aee4f0c5df0f79/crates/spatial-bench-core/src/exec.rs),
-[manifest validation](https://github.com/spatial-bench/spatial-bench-core/blob/2104bfe8b2ba04c31ee484e9a9aee4f0c5df0f79/crates/spatial-bench-core/src/manifest.rs).
+[manifest validation](https://github.com/spatial-bench/spatial-bench-core/blob/2104bfe8b2ba04c31ee484e9a9aee4f0c5df0f79/crates/spatial-bench-core/src/catalog_load.rs).
 
 The run document is not a complete reproduction package. Current assembly leaves
 engine `git_sha` absent and uses `git_dirty` to mark subject-path overrides,
