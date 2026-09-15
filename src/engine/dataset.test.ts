@@ -55,6 +55,7 @@ describe("the dataset loader against a real collated snapshot", () => {
     const spec: ChartSpec = {
       filters: [
         { field: "impl", op: "eq", values: ["kiddo"] },
+        { field: "version", op: "in", values: ["5.3.3", "6.3.0"] },
         { field: "query", op: "eq", values: ["exact_nn"] },
         { field: "config", op: "eq", values: ["default"] },
       ],
@@ -86,9 +87,9 @@ test("the local gzip fixture verifies its uncompressed SQLite hash", async () =>
   const zipped = readFileSync(`.fixture/${manifest.db}`);
   const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(zipped));
   try {
-    expect(await fetchSnapshot("/data", manifest)).toEqual(new Uint8Array(raw));
+    expect(Buffer.from(await fetchSnapshot("/data", manifest)).equals(raw)).toBe(true);
     fetch.mockResolvedValue(new Response(raw));
-    expect(await fetchSnapshot("/data", manifest)).toEqual(new Uint8Array(raw));
+    expect(Buffer.from(await fetchSnapshot("/data", manifest)).equals(raw)).toBe(true);
     fetch.mockResolvedValue(new Response(zipped));
     await expect(
       fetchSnapshot("/data", { ...manifest, sha256: "incorrect" }),
