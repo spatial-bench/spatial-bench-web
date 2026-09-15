@@ -1,0 +1,51 @@
+---
+import "../index.css";
+
+interface Props {
+  title: string;
+  description: string;
+  wide?: boolean;
+}
+const { title, description, wide = false } = Astro.props;
+const links = [
+  ["/explore", "Explore"],
+  ["/about", "About"],
+  ["/guide", "Reading guide"],
+  ["/methodology", "Methodology"],
+  ["/coverage", "Coverage"],
+  ["/contribute", "Contribute"],
+  ["/updates", "Updates"],
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title} · spatial-bench</title>
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="/">spatial-bench<span>Spatial index benchmarks</span></a>
+      <nav class="header-links" aria-label="Quick links"><a href="/explore">Explore</a><a href="/methodology">Methodology</a></nav>
+      <details class="site-menu">
+        <summary><span aria-hidden="true">☰</span> Menu</summary>
+        <nav aria-label="Main navigation">
+          {links.map(([href, label]) => <a href={href} aria-current={Astro.url.pathname.replace(/\/$/, "") === href ? "page" : undefined}>{label}</a>)}
+        </nav>
+      </details>
+    </header>
+    <main id="main" class:list={["page", { wide }]} tabindex="-1">
+      <h1>{title}</h1>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <span>spatial-bench · Workloads before rankings.</span>
+      <a href="/contribute">Contribute</a>
+      <a href="https://github.com/spatial-bench">Source on GitHub</a>
+    </footer>
+  </body>
+</html>

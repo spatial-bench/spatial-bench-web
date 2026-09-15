@@ -1,7 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode, useEffect, useMemo, useState } from "react";
-import { createRoot } from "react-dom/client";
-import "./index.css";
 import { BenchChart } from "./components/BenchChart";
 import { SpecEditor } from "./components/SpecEditor";
 import type { SeriesStyle } from "./engine/group";
@@ -251,16 +249,6 @@ function Explorer(): React.ReactElement {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-zinc-800 bg-zinc-950/95 px-4 py-3 backdrop-blur sm:px-6">
-        <div className="mx-auto flex max-w-5xl items-baseline justify-between gap-4">
-          <h1 className="text-lg font-semibold">spatial-bench</h1>
-          <span className="truncate text-xs text-zinc-500">
-            {machines.length === 1
-              ? `machine: ${machines[0]}`
-              : `${machines.length} machines`}
-          </span>
-        </div>
-      </header>
       <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6">
         <details open className="mb-6 rounded-lg border border-zinc-800 bg-zinc-950">
           <summary className="cursor-pointer px-4 py-2.5 text-sm font-medium text-zinc-300">
@@ -324,13 +312,11 @@ function Explorer(): React.ReactElement {
 }
 
 export default function App(): React.ReactElement {
-  return <Explorer />;
+  return (
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <Explorer />
+      </QueryClientProvider>
+    </StrictMode>
+  );
 }
-
-createRoot(document.getElementById("root") ?? document.body).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </StrictMode>,
-);

@@ -1,51 +1,33 @@
 # spatial-bench-web
 
-Benchmark results explorer for the [spatial-bench](https://github.com/spatial-bench/spatial-bench-core) engine.
+The [spatial-bench website](https://spatial-bench.org): public explanations and an
+interactive spatial index benchmark explorer.
 
-## Stack
+- [Understand the results](https://spatial-bench.org/guide)
+- [Methodology](https://spatial-bench.org/methodology)
+- [Contribute to the project](https://spatial-bench.org/contribute)
+- [Develop this website](CONTRIBUTING.md)
 
-| Layer | Choice |
-|---|---|
-| Build | Vite (static SPA — Cloudflare Pages) |
-| Language | TypeScript, strict |
-| Styling | Tailwind CSS v4 |
-| Charts | visx (D3 primitives as React components) |
-| Server state | TanStack Query |
-| Lint + format | Biome |
-| Data | wa-sqlite over the published snapshot |
+Astro generates static HTML for `/`, `/about`, `/guide`, `/methodology`, `/coverage`,
+`/contribute` and `/updates`. Public prose lives in `docs/*.md`. The existing React,
+visx and TanStack Query explorer runs in the browser at `/explore`. Legacy
+`/?spec=…` URLs retain their complete chart specification.
 
-## Data source
+The explorer downloads a gzip SQLite snapshot and verifies the SHA-256 of the
+**uncompressed SQLite bytes** before opening it with `@sqlite.org/sqlite-wasm`.
+The [results repository](https://github.com/spatial-bench/spatial-bench-results)
+owns the records and publication pipeline. Public pages and the pre-rendered home
+charts need no live dataset, React runtime or SQLite download.
 
-The [results repo](https://github.com/spatial-bench/spatial-bench-results)
-collates every merged run document into a SQLite file and publishes it to
-Cloudflare R2 on merge: an immutable `benchmarks-<sha>.sqlite.zst` plus a
-`latest.json` pointer (the only mutable object). This app polls
-`latest.json`, downloads the snapshot when it changes, and queries it
-in-browser; lazy HTTP-range loading is the upgrade path once the dataset
-outgrows a straight download.
+## Start locally
 
-Point `VITE_DATASET_BASE` at the bucket's public base URL (dev: a local
-`/data` directory works with `vite`).
-
-## Develop
+Use Node 22.12+ (CI uses Node 24), pnpm 12 and the checked-in test snapshot:
 
 ```sh
-pnpm install
-pnpm dev      # vite dev server
-pnpm check    # biome lint + format
-pnpm test     # vitest
-pnpm build    # tsc + vite production build
+pnpm install --frozen-lockfile
+node scripts/fixture.mjs
+pnpm dev
 ```
 
-## Local dev data
-
-`pnpm dev` expects `/data/latest.json`. Regenerate a local fixture from the
-results checkout (untracked, not deployed):
-
-```sh
-cargo run -p spatial-bench -- publish --results ../spatial-bench-results \
-  --out public/data/benchmarks-local.sqlite
-gzip -9 public/data/benchmarks-local.sqlite
-# write public/data/latest.json: {"db":"benchmarks-local.sqlite.gz","sha":"local",
-#   "sha256":"<hash of the .gz>","bytes":<gz size>,"generated_at":"<utc now>"}
-```
+Open `http://localhost:4321` or `/explore`. See [CONTRIBUTING.md](CONTRIBUTING.md)
+for current-data fixtures, checks, architecture and Workers/R2 deployment.

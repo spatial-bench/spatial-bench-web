@@ -1,0 +1,52 @@
+---
+import { BenchChart } from "../components/BenchChart";
+import { featuredCharts, snapshot } from "../data/featured";
+import SiteLayout from "../layouts/SiteLayout.astro";
+---
+<SiteLayout title="Spatial queries. Measured." description="Explore spatial index benchmarks, understand the measurements, and contribute coverage." wide>
+  <p class="intro">How does a spatial index behave on your workload? spatial-bench records measurements for specific libraries, queries and machines, and makes the comparisons open to inspection.</p>
+  <div class="actions"><a class="primary" href="/explore">Explore the results →</a><a href="/guide">Understand the results</a><a href="/contribute">Contribute</a></div>
+  <section class="home-section" aria-labelledby="featured-title">
+    <h2 id="featured-title">A view into the results</h2>
+    <p>Exact nearest neighbour search in three dimensions. One recorded machine, growing trees, three library implementations.</p>
+    {featuredCharts.map(({ axis, chart, spec, styles, href }, index) => (
+      <figure class="featured" data-featured hidden={index !== 0}>
+        <h3>{axis === "f32" ? "32-bit" : "64-bit"} coordinates · one nearest neighbour</h3>
+        <div class="chart-key">{chart.series.map((series, i) => <span><i style={`background:${styles[i]?.colour}`} aria-hidden="true"></i>{series.identity.impl} {series.identity.version}</span>)}</div>
+        <div class="chart-svg" role="img" aria-label={`Recorded latency against tree size, ${axis} coordinates. Exact values are in the table below.`}>
+          <BenchChart chart={chart} spec={spec} styles={styles} width={960} height={340} selected={null} onSelect={() => {}} />
+        </div>
+        <figcaption>{snapshot.machine} · uniform points · squared Euclidean distance · single thread · individual queries · default configurations. Recorded 13 September 2026; snapshot captured {snapshot.captured}. Latency is the recorded median where available, otherwise the mean; logarithmic axes. Language and adapter overhead are included in each driver's timed region. <a href="/methodology">Methods and limitations</a>.</figcaption>
+        <p><a href={href}>Open this workload in the explorer →</a> <span class="muted">The explorer uses the current snapshot.</span></p>
+        <details><summary>View values and source records</summary><div class="data-table"><table>
+          <thead><tr><th>Library / version</th><th>Tree points</th><th>Latency (ns/query)</th><th>Run record</th></tr></thead>
+          <tbody>{chart.series.flatMap(series => series.points.map(p => <tr><td>{series.identity.impl} {series.identity.version}</td><td>{p.x}</td><td>{p.y}</td><td><a href={`https://github.com/spatial-bench/spatial-bench-results/blob/${snapshot.revision}/${snapshot.sources[p.point.runId as keyof typeof snapshot.sources]}`}>{p.point.runId.slice(0, 10)}…</a></td></tr>))}</tbody>
+        </table></div></details>
+      </figure>
+    ))}
+    <p class="muted">One of two pre-rendered examples is selected on each visit. This is a workload example, not an overall ranking. <a href="/coverage">Check coverage before generalizing.</a></p>
+  </section>
+  <div class="home-grid">
+    <section class="home-section" aria-labelledby="libraries-title">
+      <h2 id="libraries-title">Libraries in the records</h2>
+      <div class="library-list"><a href="/coverage#recorded-coverage">Kiddo · Rust</a><a href="/coverage#recorded-coverage">kdtree · Rust</a><a href="/coverage#recorded-coverage">nanoflann · C++</a><a href="/coverage#recorded-coverage">pykdtree · Python</a></div>
+      <p>These libraries appear in the merged results checkout at {snapshot.revision.slice(0, 7)}. Their query, version and configuration coverage differs.</p>
+      <a href="/coverage">See coverage and its limits →</a>
+    </section>
+    <section class="home-section" aria-labelledby="updates-title">
+      <h2 id="updates-title">Recent updates</h2>
+      <p class="muted"><time datetime="2026-09-14">14 September 2026</time></p>
+      <h3><a href="/updates#2026-09-14--a-guide-to-the-comparisons">A guide to the comparisons</a></h3>
+      <p>New reading, methodology and contribution guides explain what a plotted point means and how to extend the experiment.</p>
+      <a href="/updates">Read the editorial updates →</a>
+    </section>
+  </div>
+</SiteLayout>
+<script is:inline>
+  if (new URLSearchParams(location.search).has("spec")) {
+    location.replace(`/explore${location.search}${location.hash}`);
+  }
+  const charts = document.querySelectorAll("[data-featured]");
+  const selected = Math.floor(Math.random() * charts.length);
+  charts.forEach((chart, index) => { chart.hidden = index !== selected; });
+</script>

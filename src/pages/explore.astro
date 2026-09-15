@@ -1,0 +1,9 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import App from "../main";
+---
+<SiteLayout title="Explore the results" description="Compare spatial index measurements for your machine and workload." wide>
+  <p class="intro">Choose a workload, then compare its measurements. <a href="/guide">How to read a chart</a> · <a href="/methodology">Measurement methods</a></p>
+  <App client:only="react"><p slot="fallback">Loading explorer…</p></App>
+  <noscript><p>The interactive explorer needs JavaScript. The <a href="/guide">reading guide</a> and <a href="/coverage">coverage notes</a> work without it.</p></noscript>
+</SiteLayout>

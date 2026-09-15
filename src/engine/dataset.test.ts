@@ -77,3 +77,23 @@ describe("the dataset loader against a real collated snapshot", () => {
     expect(distinctValues(points, "machine_hash")).toEqual(["anxrmnkpfa-qxmvv"]);
   });
 });
+
+test("the local gzip fixture verifies its uncompressed SQLite hash", async () => {
+  const { fetchSnapshot } = await import("./dataset");
+  const { vi } = await import("vitest");
+  const manifest = JSON.parse(readFileSync(".fixture/latest.json", "utf8"));
+  const raw = readFileSync(".fixture/benchmarks-test.sqlite");
+  const zipped = readFileSync(`.fixture/${manifest.db}`);
+  const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(zipped));
+  try {
+    expect(await fetchSnapshot("/data", manifest)).toEqual(new Uint8Array(raw));
+    fetch.mockResolvedValue(new Response(raw));
+    expect(await fetchSnapshot("/data", manifest)).toEqual(new Uint8Array(raw));
+    fetch.mockResolvedValue(new Response(zipped));
+    await expect(
+      fetchSnapshot("/data", { ...manifest, sha256: "incorrect" }),
+    ).rejects.toThrow("sha256 mismatch");
+  } finally {
+    fetch.mockRestore();
+  }
+});
