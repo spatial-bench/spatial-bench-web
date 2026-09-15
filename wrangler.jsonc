@@ -1,5 +1,5 @@
 {
-  // Cloudflare Workers deploy: the built SPA in dist/ is served from the
+  // Cloudflare Workers deploy: the built static site in dist/ is served from the
   // asset layer; /data/* is proxied to the R2 dataset bucket by src/worker.ts
   // (same-origin, so the front-end needs no CORS and the r2.dev URL never
   // appears publicly). VITE_DATASET_BASE stays unset — the app's default
@@ -11,7 +11,8 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/data/*"]
   },
   "r2_buckets": [
     {

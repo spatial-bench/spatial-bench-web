@@ -47,11 +47,7 @@ jobs:
           engine/target/release/spatial-bench publish \
             --results results \
             --out .fixture/benchmarks-test.sqlite --sha local
-          gzip -9kf .fixture/benchmarks-test.sqlite
-          HASH=$(sha256sum .fixture/benchmarks-test.sqlite.gz | cut -d' ' -f1)
-          SIZE=$(stat -c%s .fixture/benchmarks-test.sqlite.gz)
-          printf '{"db": "benchmarks-test.sqlite.gz", "sha": "local", "sha256": "%s", "bytes": %s, "generated_at": "local"}\n' \
-            "$HASH" "$SIZE" > .fixture/latest.json
+          node scripts/fixture.mjs .fixture/benchmarks-test.sqlite .fixture
 
       - run: pnpm check
       - run: pnpm test
