@@ -227,7 +227,7 @@ a:hover {
   font-weight: 600;
   font-size: 1.1rem;
 }
-.featured .chart-svg svg {
+.featured .chart-svg > svg {
   width: 100%;
   height: auto;
   pointer-events: none;

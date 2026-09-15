@@ -273,7 +273,7 @@ passing submission command.
 
 Independent review means someone other than the author can inspect the adapter,
 workload, provenance and evidence. It does not imply a recorded independent
-rerun. Registration checks establish declared/implemented case coverage, not
+rerun. Registration checks compare declared and listed compile-time registrations, not
 answer correctness, timing equivalence or environment control. Known-answer
 checks, radius/boundary checks and comparisons with a reference implementation
 belong in driver review. The [contribution paths](/contribute) separate driver

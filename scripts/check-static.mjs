@@ -51,6 +51,13 @@ const home = documents.get("/");
 assert.equal(home.querySelectorAll("[data-featured]").length, 2);
 assert.equal(home.querySelectorAll("[data-featured]:not([hidden])").length, 1);
 assert(home.querySelector(".chart-svg svg"), "actual pre-rendered chart");
+for (const svg of home.querySelectorAll(".chart-svg > svg")) {
+  assert.equal(
+    svg.getAttribute("viewBox"),
+    `0 0 ${svg.getAttribute("width")} ${svg.getAttribute("height")}`,
+    "landing chart must scale its coordinates on narrow screens",
+  );
+}
 assert(
   home.querySelector(".data-table tbody tr a"),
   "source records for plotted values",
