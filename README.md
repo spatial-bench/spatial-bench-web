@@ -1,51 +1,35 @@
 # spatial-bench-web
 
-Benchmark results explorer for the [spatial-bench](https://github.com/spatial-bench/spatial-bench-core) engine.
+The website for [spatial-bench](https://spatial-bench.org): benchmark comparisons,
+reading guides and technical methodology. Astro builds the public Markdown
+pages; React runs the interactive explorer at `/explore`.
 
-## Stack
+## Preview the site
 
-| Layer | Choice |
-|---|---|
-| Build | Vite (static SPA — Cloudflare Pages) |
-| Language | TypeScript, strict |
-| Styling | Tailwind CSS v4 |
-| Charts | visx (D3 primitives as React components) |
-| Server state | TanStack Query |
-| Lint + format | Biome |
-| Data | wa-sqlite over the published snapshot |
-
-## Data source
-
-The [results repo](https://github.com/spatial-bench/spatial-bench-results)
-collates every merged run document into a SQLite file and publishes it to
-Cloudflare R2 on merge: an immutable `benchmarks-<sha>.sqlite.zst` plus a
-`latest.json` pointer (the only mutable object). This app polls
-`latest.json`, downloads the snapshot when it changes, and queries it
-in-browser; lazy HTTP-range loading is the upgrade path once the dataset
-outgrows a straight download.
-
-Point `VITE_DATASET_BASE` at the bucket's public base URL (dev: a local
-`/data` directory works with `vite`).
-
-## Develop
+With Node 22.12+ and pnpm 12, run from the repository root:
 
 ```sh
-pnpm install
-pnpm dev      # vite dev server
-pnpm check    # biome lint + format
-pnpm test     # vitest
-pnpm build    # tsc + vite production build
+pnpm install --frozen-lockfile
+node scripts/fixture.mjs
+pnpm dev
 ```
 
-## Local dev data
+Open `http://localhost:4321`. The checked-in fixture lets you use the explorer
+without production credentials or running benchmarks.
 
-`pnpm dev` expects `/data/latest.json`. Regenerate a local fixture from the
-results checkout (untracked, not deployed):
+## Edit the site
 
-```sh
-cargo run -p spatial-bench -- publish --results ../spatial-bench-results \
-  --out public/data/benchmarks-local.sqlite
-gzip -9 public/data/benchmarks-local.sqlite
-# write public/data/latest.json: {"db":"benchmarks-local.sqlite.gz","sha":"local",
-#   "sha256":"<hash of the .gz>","bytes":<gz size>,"generated_at":"<utc now>"}
-```
+- Public documentation: [`docs/`](docs/guide.md).
+- Shared layout and navigation: [`SiteLayout.astro`](src/layouts/SiteLayout.astro).
+- Landing page: [`index.astro`](src/pages/index.astro).
+- React explorer: [`main.tsx`](src/main.tsx).
+
+[CONTRIBUTING.md](CONTRIBUTING.md) covers Markdown conventions, current-results
+fixtures, validation and deployment.
+
+## Related repositories
+
+[Core](https://github.com/spatial-bench/spatial-bench-core) executes benchmarks and
+collates results. [Benchers](https://github.com/spatial-bench/spatial-bench-benchers)
+contains library adapters. [Results](https://github.com/spatial-bench/spatial-bench-results)
+stores run documents and publishes the database used by this website.

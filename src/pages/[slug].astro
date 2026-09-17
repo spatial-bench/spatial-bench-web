@@ -1,0 +1,25 @@
+---
+import type { MarkdownInstance } from "astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+export function getStaticPaths() {
+  const pages = import.meta.glob<
+    MarkdownInstance<{ title: string; description: string }>
+  >("../../docs/*.md", { eager: true });
+  return Object.entries(pages).map(([file, page]) => ({
+    params: { slug: file.split("/").pop()!.replace(/\.md$/, "") },
+    props: { page },
+  }));
+}
+const { page } = Astro.props;
+const { Content, frontmatter } = page;
+---
+
+<SiteLayout
+  title={frontmatter.title}
+  description={frontmatter.description}
+  headings={page.getHeadings()}
+>
+  <article class="prose">
+    <Content />
+  </article>
+</SiteLayout>

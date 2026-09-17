@@ -1,0 +1,27 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import App from "../main";
+---
+
+<SiteLayout
+  title="Explore the results"
+  description="Compare spatial index measurements for your machine and workload."
+  wide
+>
+  <nav class="explorer-links" aria-label="Explorer help">
+    <a href="/guide">Read a comparison</a>
+    <a href="/coverage">Check coverage</a>
+  </nav>
+  <div class="explorer-shell">
+    <App client:only="react">
+      <p slot="fallback">Loading explorer...</p>
+    </App>
+  </div>
+  <noscript>
+    <p>
+      The interactive explorer needs JavaScript. The{" "}
+      <a href="/guide">reading guide</a> and{" "}
+      <a href="/coverage">coverage notes</a> work without it.
+    </p>
+  </noscript>
+</SiteLayout>

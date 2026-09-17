@@ -1,1 +1,7 @@
-{"db": "benchmarks-test.sqlite", "sha": "local", "runs": 16, "points": 414, "machines": 1, "generated_at": "1789297595"}
+{
+  "db": "benchmarks-test.sqlite.gz",
+  "sha": "local",
+  "sha256": "0636b92dd866dec948617594be84a26a76a3f5e0a6b2a69593aab6e39493c85d",
+  "bytes": 65837,
+  "generated_at": "2026-09-14T22:51:03.445Z"
+}

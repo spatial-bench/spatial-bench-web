@@ -3,17 +3,36 @@
   "files": {
     "includes": [
       "src/**",
-      "vite.config.ts",
       "vitest.config.ts",
       "biome.json",
       "package.json",
       "tsconfig.json",
       "!dist",
-      "!node_modules"
+      "!node_modules",
+      "astro.config.mjs",
+      "scripts/**"
     ]
   },
-  "formatter": { "enabled": true, "indentStyle": "space", "lineWidth": 88 },
-  "linter": { "enabled": true, "rules": { "preset": "none" } },
-  "javascript": { "formatter": { "quoteStyle": "double", "semicolons": "always" } },
-  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true }
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "lineWidth": 88
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "none"
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always"
+    }
+  },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  }
 }
