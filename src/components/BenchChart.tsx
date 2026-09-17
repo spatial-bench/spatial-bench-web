@@ -139,6 +139,7 @@ export function BenchChart({
       }}
       width={width}
       height={height}
+      viewBox={`0 0 ${width} ${height}`}
       role="img"
       className="touch-none select-none"
       onPointerDown={onPointerDown}

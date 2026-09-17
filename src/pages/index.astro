@@ -1,0 +1,235 @@
+---
+import { BenchChart } from "../components/BenchChart";
+import { featuredCharts, snapshot } from "../data/featured";
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+const libraries = [
+  ["Kiddo", "Rust", "Nearest neighbours and radius queries"],
+  ["kdtree", "Rust", "Nearest neighbours"],
+  ["nanoflann", "C++", "Nearest neighbours"],
+  ["pykdtree", "Python", "Nearest neighbours"],
+];
+---
+
+<SiteLayout
+  title="Spatial index benchmarks"
+  description="Compare spatial-index libraries for your query workload, read the methodology and contribute measurements."
+  home
+  wide
+>
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Spatial index benchmarks</p>
+      <h1>
+        Compare spatial indexes
+        <br class="desktop-break" /> for your workload.
+      </h1>
+    </div>
+    <div class="hero-intro">
+      <p>
+        Explore query timings across libraries, versions and configurations.
+        Choose a workload, inspect a measurement and follow it back to the code
+        and source record.
+      </p>
+      <div class="actions">
+        <a class="button primary" href="/explore">
+          Explore results
+        </a>
+        <a class="text-link" href="/guide">
+          Read a comparison
+        </a>
+      </div>
+    </div>
+  </section>
+  <section class="spotlight" aria-labelledby="comparison-heading">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">An example from the results</p>
+        <h2 id="comparison-heading">Query time as the index grows</h2>
+      </div>
+      <a class="text-link" href="/methodology">
+        Measurement methods
+      </a>
+    </div>
+    {featuredCharts.map(({ axis, chart, spec, styles, href }, index) => (
+      <figure class="featured" data-featured hidden={index !== 0}>
+        <div class="chart-heading">
+          <h3>One exact nearest neighbour</h3>
+          <span class="precision">
+            {axis === "f32" ? "32-bit" : "64-bit"} coordinates
+          </span>
+        </div>
+        <p class="chart-context">
+          3D uniform points · single-threaded · individual queries · AMD Ryzen 5
+          8500GE
+        </p>
+        <div class="chart-key">
+          {chart.series.map((s, i) => (
+            <span>
+              <i
+                style={`background:${styles[i]?.colour}`}
+                aria-hidden="true"
+              ></i>
+              {s.identity.impl} <small>{s.identity.version}</small>
+            </span>
+          ))}
+        </div>
+        <div
+          class="chart-svg desktop-chart"
+          role="img"
+          aria-label={`${axis} query latency against tree size; exact values follow below.`}
+        >
+          <BenchChart
+            chart={chart}
+            spec={spec}
+            styles={styles}
+            width={960}
+            height={330}
+            selected={null}
+            onSelect={() => {}}
+          />
+        </div>
+        <div
+          class="chart-svg mobile-chart"
+          role="img"
+          aria-label={`${axis} query latency against tree size; exact values follow below.`}
+        >
+          <BenchChart
+            chart={chart}
+            spec={spec}
+            styles={styles}
+            width={360}
+            height={260}
+            selected={null}
+            onSelect={() => {}}
+          />
+        </div>
+        <figcaption>
+          Median query latency, with mean fallback. Logarithmic axes; squared
+          Euclidean distance; recorded default configurations. Measurements from
+          13 September 2026.
+        </figcaption>
+        <div class="chart-actions">
+          <a href={href}>Explore this workload</a>
+          <span>The explorer loads current results.</span>
+        </div>
+        <details class="source-values">
+          <summary>Values and source records</summary>
+          <div class="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Library / version</th>
+                  <th>Indexed points</th>
+                  <th>Latency (ns/query)</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                {chart.series.flatMap((s) =>
+                  s.points.map((p) => (
+                    <tr>
+                      <td>
+                        {s.identity.impl} {s.identity.version}
+                      </td>
+                      <td>{p.x}</td>
+                      <td>{p.y}</td>
+                      <td>
+                        <a
+                          href={`https://github.com/spatial-bench/spatial-bench-results/blob/${snapshot.revision}/${snapshot.sources[p.point.runId as keyof typeof snapshot.sources]}`}
+                        >
+                          Run {p.point.runId.slice(0, 8)}
+                        </a>
+                      </td>
+                    </tr>
+                  )),
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Fixed excerpt from results revision{" "}
+            <a
+              href={`https://github.com/spatial-bench/spatial-bench-results/tree/${snapshot.revision}`}
+            >
+              {snapshot.revision.slice(0, 7)}
+            </a>
+            , captured {snapshot.captured}.
+          </p>
+        </details>
+      </figure>
+    ))}
+    <p class="section-note">
+      An example is selected on each visit. Compare the workload and
+      configuration before applying these timings to your application.
+    </p>
+  </section>
+  <section class="library-section" aria-labelledby="libraries-heading">
+    <div class="section-heading">
+      <h2 id="libraries-heading">Libraries in the results</h2>
+      <a class="text-link" href="/coverage">
+        Check coverage
+      </a>
+    </div>
+    <div class="library-grid">
+      {libraries.map(([name, language, queries]) => (
+        <a class="library-card" href="/coverage#recorded-libraries-and-queries">
+          <span class="eyebrow">{language}</span>
+          <h3>{name}</h3>
+          <p>{queries}</p>
+        </a>
+      ))}
+    </div>
+  </section>
+  <section class="reading-section" aria-labelledby="reading-heading">
+    <h2 id="reading-heading">Use and extend the comparisons</h2>
+    <div class="reading-grid">
+      <a class="reading-card" href="/guide">
+        <span class="eyebrow">Reading the results</span>
+        <h3>Set up a comparison</h3>
+        <p>
+          Choose a workload, understand the chart settings and inspect the
+          evidence behind a point.
+        </p>
+        <span class="text-link">Open the reading guide</span>
+      </a>
+      <a class="reading-card" href="/contribute">
+        <span class="eyebrow">Contributing</span>
+        <h3>Add your library or workload</h3>
+        <p>
+          Find the guides for library adapters, datasets, query types and
+          benchmark contributions.
+        </p>
+        <span class="text-link">Find a contributor guide</span>
+      </a>
+    </div>
+  </section>
+  <section class="update-section" aria-labelledby="updates-heading">
+    <h2 id="updates-heading">Project updates</h2>
+    <div>
+      <time datetime="2026-09-16">September 2026</time>
+      <h3>
+        <a href="/updates#september-2026-documentation-and-navigation">
+          Documentation and navigation
+        </a>
+      </h3>
+      <p>
+        New reading and methodology guides, contributor instructions and a
+        separate home for the explorer.
+      </p>
+    </div>
+    <a class="text-link" href="/updates">
+      All updates
+    </a>
+  </section>
+</SiteLayout>
+<script is:inline>
+  if (new URLSearchParams(location.search).has("spec")) {
+    location.replace(`/explore${location.search}${location.hash}`);
+  }
+  const charts = document.querySelectorAll("[data-featured]");
+  const selected = Math.floor(Math.random() * charts.length);
+  charts.forEach((chart, index) => {
+    chart.hidden = index !== selected;
+  });
+</script>

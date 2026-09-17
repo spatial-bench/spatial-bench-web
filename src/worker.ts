@@ -1,5 +1,5 @@
 /**
- * The deploy's worker: serves the built SPA from assets, and proxies
+ * The deploy's worker: serves the built static site from assets, and proxies
  * /data/* to the R2 dataset bucket — same-origin, so the browser needs no
  * CORS dance and the r2.dev URL stays out of the public surface.
  */
@@ -9,7 +9,7 @@ interface Env {
   DATASET: {
     get: (key: string) => Promise<DatasetObject | null>;
   };
-  /** The built SPA (wrangler assets binding). */
+  /** The built static site (wrangler assets binding). */
   ASSETS: {
     fetch: (request: Request) => Promise<Response>;
   };
