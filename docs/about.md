@@ -2,21 +2,24 @@
 title: About spatial-bench
 description: Compare spatial-index libraries using recorded query workloads and inspectable benchmark code.
 ---
-spatial-bench measures the cost of spatial queries across library implementations.
-Use it to compare libraries for a workload, examine changes between measured
-versions, or investigate how query time grows with the number of indexed points.
+spatial-bench measures what spatial queries actually cost across different library
+implementations. You can use it to compare libraries for a workload you care about,
+to see how a newer measured version changed, or to understand how query time grows
+as the number of indexed points increases.
 
 ## Comparing libraries
 
-A comparison starts with the query your application needs. Dimensions, numeric
-precision, input distribution and execution mode all affect the result. The
-[reading guide](/guide) works through an exact nearest-neighbour comparison; the
-[methodology](/methodology) describes the experiment behind each measurement.
+A useful comparison starts with the query your application needs, because
+dimensions, numeric precision, input distribution and execution mode all change the
+result. The [reading guide](/guide) works through an exact nearest-neighbour
+comparison as a concrete example, and the [methodology](/methodology) describes the
+experiment behind every measurement.
 
-The explorer lets you select those conditions and inspect individual points.
-Each point belongs to a run document containing its library version, configuration
-and available machine information. Source records and adapter code are public,
-so readers can examine the calls being timed.
+The explorer lets you select those conditions and inspect individual points. Each
+point belongs to a run document that records its library version, configuration and
+whatever machine information was available. Because the source records and adapter
+code are public, you can also examine the calls that were timed rather than taking
+the number on trust.
 
 ## Project organization
 
@@ -27,18 +30,18 @@ so readers can examine the calls being timed.
 | [Results](https://github.com/spatial-bench/spatial-bench-results) | Store run documents and publish the explorer's database |
 | [Web](https://github.com/spatial-bench/spatial-bench-web) | Present comparisons and maintain these guides |
 
-A library adapter translates a declared workload into calls to that library.
-The engine runs it and writes a result document. Accepted records are collated
-into the snapshot loaded by the website.
+A library adapter translates a declared workload into calls to that library; the
+engine runs the adapter and writes a result document; accepted records are collated
+into the snapshot the website loads.
 
 ## Contributing and review
 
-Library authors can add adapters or extend an existing entry. Other contributions
-include datasets, query types, engine development and documentation. The
-[contribution guides](/contribute) identify the repository and starting point
-for each task.
+Library authors can add adapters or extend an existing entry, and there is similar
+work in datasets, query types, engine development and documentation. The
+[contribution guides](/contribute) point to the repository and starting point for
+each of these.
 
-Changes are proposed through pull requests. Review can examine query semantics,
-timing boundaries and the evidence supplied with a measurement. Independent
-reruns are additional evidence; merging a record does not establish that one
-has taken place.
+Changes arrive as pull requests. Review can examine query semantics, timing
+boundaries and the evidence supplied with a measurement. Independent reruns are
+additional evidence rather than something the project guarantees, and merging a
+record does not by itself establish that one took place.

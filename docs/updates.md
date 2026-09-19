@@ -5,10 +5,10 @@ description: Changes to spatial-bench's documentation and published tools.
 ## September 2026: documentation and navigation
 
 The website now includes a [worked reading guide](/guide), a
-[methodology reference](/methodology) and [contributor guides](/contribute).
-The [explorer](/explore) has its own page; existing shared chart links continue
-to open the same settings.
+[methodology reference](/methodology) and [contributor guides](/contribute). The
+[explorer](/explore) has its own page, and existing shared chart links continue to
+open with the same settings as before.
 
-The home page includes example charts with links to their source records.
-Each example uses a fixed results excerpt. Open it in the explorer to work
-with the current published snapshot.
+The home page shows example charts alongside links to the records they came from.
+Each example uses a fixed results excerpt; open one in the explorer to work with the
+current published snapshot instead.
