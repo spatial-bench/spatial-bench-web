@@ -15,7 +15,6 @@ const links = [
   ["/methodology", "Methodology"],
   ["/coverage", "Coverage"],
   ["/about", "About the project"],
-  ["/contribute", "Contribute"],
   ["/updates", "Updates"],
 ];
 const path = Astro.url.pathname.replace(/\/$/, "") || "/";
@@ -66,12 +65,7 @@ const contents = headings?.filter((h) => h.depth === 2) ?? [];
         >
           Methodology
         </a>
-        <a
-          href="/contribute"
-          aria-current={path === "/contribute" ? "page" : undefined}
-        >
-          Contribute
-        </a>
+        <a href="https://github.com/spatial-bench">Repositories</a>
       </nav>
       <details class="site-menu">
         <summary>
@@ -154,7 +148,6 @@ const contents = headings?.filter((h) => h.depth === 2) ?? [];
       <span>Spatial index benchmarks</span>
       <nav aria-label="Footer">
         <a href="/about">About</a>
-        <a href="/contribute">Contribute</a>
         <a href="https://github.com/spatial-bench">GitHub</a>
       </nav>
     </footer>
