@@ -93,12 +93,14 @@ limit, collection can exceed it. The wrapper requires positive durations and at
 least 10 samples, and reads the mean estimate from `estimates.json` rather than the
 optional regression slope. [Measurement wrapper][measurement]
 
-nanoflann uses `steady_clock` and pykdtree uses `perf_counter_ns`. After warm-up,
-each sample times one complete probe pass. Collection stops when **either** the
-requested sample count or the measurement time is reached, with the deadline checked
-between bodies: a fast case can finish 30 samples well before five seconds, while
-the last body of a slow case can overshoot. Zero samples is an error, and there is
-no stopping rule based on statistical precision. [C++ sampling][nanoflann], [Python sampling][python]
+The C++ executable adapters use `steady_clock`, while the Python executable adapters
+use `perf_counter_ns`. After warm-up, each sample times one complete probe pass.
+Collection stops when **either** the requested sample count or the measurement time
+is reached, with the deadline checked between bodies: a fast case can finish 30
+samples well before five seconds, while the last body of a slow case can overshoot.
+The Python adapters and nanoflann reject an empty sample set; the other C++ adapters
+do not currently guard against one. None uses a stopping rule based on statistical
+precision. [Executable sampling contract][exec-sampling], [current adapters][exec-drivers]
 
 ### Normalization and estimates
 
@@ -115,12 +117,12 @@ Rust obtains estimates of time per body from Criterion and divides the mean, bou
 and dispersion estimates by `Q`. The table specifies the inspected Criterion 0.8.2
 implementation and the current exec loops:
 
-| Quantity | Rust / Criterion | nanoflann and pykdtree |
+| Quantity | Rust / Criterion | C++ and Python executable adapters |
 | --- | --- | --- |
 | Mean interval | 95% bootstrap interval; 100,000 resamples by default | `mean +/- 1.96 * SD / sqrt(n)` |
 | Standard deviation | Denominator `n - 1` | Denominator `n` |
 | Median | Interpolated 50th percentile | Sorted observation at zero-based index `floor(n/2)` |
-| Median absolute deviation (MAD) | Median absolute deviation multiplied by `1.4826` | Upper-middle absolute deviation, unscaled |
+| Median absolute deviation (MAD) | Median absolute deviation multiplied by `1.4826` | Upper-middle absolute deviation, unscaled; the newer C++ shims currently report zero instead |
 | Sample count | Length of Criterion's `sample.json.times` | Number of timed probe passes |
 
 Criterion classifies Tukey outliers but retains them for these estimates. Its
@@ -193,8 +195,10 @@ concurrency settings requires measurements of those workloads.
 ## Implementation references
 
 These methods describe engine `2104bfe`, benchers `1972c50`, explorer `7551596` and
-the inspected Criterion 0.8.2 source at `7f0d745`. Source links are pinned; use a
-historical run's retained build records to determine its actual dependencies.
+the inspected Criterion 0.8.2 source at `7f0d745`. The generalized executable
+sampling description also covers the adapters present in benchers `14ed2d2`. Source
+links are pinned; use a historical run's retained build records to determine its
+actual dependencies.
 
 [generator]: https://github.com/spatial-bench/spatial-bench-core/blob/2104bfe8b2ba04c31ee484e9a9aee4f0c5df0f79/crates/spatial-bench-dataset/src/main.rs
 [kiddo]: https://github.com/spatial-bench/spatial-bench-benchers/blob/1972c5004eb5c6e4b9969f5b80331d02cc9af06c/subjects/kiddo/driver/src/lib.rs
@@ -203,8 +207,8 @@ historical run's retained build records to determine its actual dependencies.
 [perf]: https://github.com/spatial-bench/spatial-bench-core/blob/2104bfe8b2ba04c31ee484e9a9aee4f0c5df0f79/crates/spatial-bench-core/src/perf.rs
 [harness]: https://github.com/spatial-bench/spatial-bench-core/blob/2104bfe8b2ba04c31ee484e9a9aee4f0c5df0f79/crates/spatial-bench-core/src/harness.rs
 [measurement]: https://github.com/spatial-bench/spatial-bench-core/blob/2104bfe8b2ba04c31ee484e9a9aee4f0c5df0f79/crates/spatial-bench-measure/src/lib.rs
-[nanoflann]: https://github.com/spatial-bench/spatial-bench-benchers/blob/1972c5004eb5c6e4b9969f5b80331d02cc9af06c/subjects/nanoflann/shim.cpp
-[python]: https://github.com/spatial-bench/spatial-bench-benchers/blob/1972c5004eb5c6e4b9969f5b80331d02cc9af06c/subjects/pykdtree/driver.py
+[exec-sampling]: https://github.com/spatial-bench/spatial-bench-benchers/blob/14ed2d29213604f6d60b99a806d9b783e81a50a3/docs/driver-contract.md#c-and-python
+[exec-drivers]: https://github.com/spatial-bench/spatial-bench-benchers/tree/14ed2d29213604f6d60b99a806d9b783e81a50a3/subjects
 [analysis]: https://github.com/criterion-rs/criterion.rs/blob/7f0d745532e3c7b2e11bbf9de9b911f91790d3b1/src/analysis/mod.rs
 [dispersion]: https://github.com/criterion-rs/criterion.rs/blob/7f0d745532e3c7b2e11bbf9de9b911f91790d3b1/src/stats/univariate/sample.rs
 [display]: https://github.com/spatial-bench/spatial-bench-web/blob/755159672d2601f6eb5a40a16e9b0fb9c0e96b8a/src/components/BenchChart.tsx

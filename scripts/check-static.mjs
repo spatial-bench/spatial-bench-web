@@ -20,7 +20,7 @@ for (const route of routes) {
     doc.querySelector("details.site-menu > summary"),
     `${route}: native keyboard menu`,
   );
-  assert.equal(doc.querySelectorAll('nav[aria-label="Main navigation"] a').length, 8);
+  assert.equal(doc.querySelectorAll('nav[aria-label="Main navigation"] a').length, 7);
   if (route !== "explore") {
     assert(!doc.querySelector("astro-island"), `${route}: must not hydrate React`);
     assert(

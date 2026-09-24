@@ -5,7 +5,8 @@ description: Changes to spatial-bench's documentation and published tools.
 ## September 2026: documentation and navigation
 
 The website now includes a [worked reading guide](/guide), a
-[methodology reference](/methodology) and [contributor guides](/contribute). The
+[methodology reference](/methodology) and links to the
+[project repositories](https://github.com/spatial-bench). The
 [explorer](/explore) has its own page, and existing shared chart links continue to
 open with the same settings as before.
 
